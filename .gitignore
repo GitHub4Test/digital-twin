@@ -1,0 +1,10 @@
+*.DS_Store
+/*.DS_Store
+.terraform/
+/*.terraform/
+venv
+/*venv
+dist
+/*dist
+*pycache*
+/*pycache*

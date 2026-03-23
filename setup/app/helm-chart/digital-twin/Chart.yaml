@@ -1,0 +1,6 @@
+apiVersion: v2
+name: digital-twin
+description: A Helm chart for frontend and backend app of digital twin
+type: application
+version: 0.1.0
+appVersion: "1.0"

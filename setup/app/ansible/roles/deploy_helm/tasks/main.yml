@@ -1,0 +1,19 @@
+---
+
+- name: Install -> Digital-Twin services using Helm
+  ansible.builtin.include_tasks:
+    file: install_k8s_apps.yml
+    apply:
+      tags:
+        - install
+  tags:
+    - install
+
+- name: Uninstall -> Digital-Twin services using Helm
+  ansible.builtin.include_tasks:
+    file: uninstall_k8s_apps.yml
+    apply:
+      tags:
+        - uninstall
+  tags:
+    - uninstall

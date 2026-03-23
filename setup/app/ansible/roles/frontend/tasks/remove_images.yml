@@ -1,0 +1,7 @@
+---
+
+- name: remove frontend image
+  community.docker.docker_image:
+    name: "{{ docker_registry }}/frontend_digital_twin_app"
+    state: absent
+  delegate_to: localhost

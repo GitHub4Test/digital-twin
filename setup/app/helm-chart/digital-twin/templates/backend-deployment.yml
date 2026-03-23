@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-backend"
+  labels:
+    app: "{{ .Release.Name }}-backend"
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}-backend"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}-backend"
+    spec:
+{{- if .Values.ecr_setup.enabled }}
+      imagePullSecrets:
+        - name: {{ .Values.ecr_setup.imagePullSecretName | quote }}
+{{- end }}
+      # nodeSelector:
+      #   kubernetes.io/hostname: k3d-dev-cluster-server-0
+      containers:
+        - name: backend-api-service
+          image: "{{ .Values.backend.containers.api_service.image }}:{{ .Values.backend.containers.api_service.tag }}"
+          ports:
+            - containerPort: {{ .Values.backend.service.port }}
+          env:
+            - name: DB_PATH
+              value: /data/database.db
+          resources:
+            requests:
+              memory: {{ .Values.backend.resources.requests.memory }}
+              cpu: {{ .Values.backend.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.backend.resources.limits.memory }}
+              cpu: {{ .Values.backend.resources.limits.cpu }}
+          volumeMounts:
+            - name: database-data
+              mountPath: /data
+        - name: backend-edge-server
+          image: "{{ .Values.backend.containers.edge_server.image }}:{{ .Values.backend.containers.edge_server.tag }}"
+          env:
+            - name: BACKEND_API_URL
+              value: http://localhost:8000/update
+          resources:
+            requests:
+              memory: {{ .Values.backend.resources.requests.memory }}
+              cpu: {{ .Values.backend.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.backend.resources.limits.memory }}
+              cpu: {{ .Values.backend.resources.limits.cpu }}
+      volumes:
+        - name: database-data
+          emptyDir: {}

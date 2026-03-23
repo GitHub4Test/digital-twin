@@ -1,0 +1,5 @@
+[mac]
+localhost ansible_connection=local ansible_user=suhas-mac
+
+[raspberrypi]
+raspberrypi ansible_host=raspberrypi.local ansible_user=pi

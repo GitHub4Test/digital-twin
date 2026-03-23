@@ -1,0 +1,54 @@
+---
+
+- name: Ensure parent directory exists
+  ansible.builtin.file:
+    path: "{{ deploy_helm_charts_folder }}"
+    state: directory
+    mode: "0755"
+
+- name: Copy Helm charts for digital twin apps to ec2
+  ansible.posix.synchronize:
+    src: "{{ playbook_dir }}/../../helm-chart/digital-twin/"
+    dest: "{{ deploy_helm_charts_folder }}/"
+    recursive: true
+    rsync_opts:
+      - "--rsh='ssh -i ~/Documents/Technical/AWS/SSH/MyEC2KeyPair.pem -o StrictHostKeyChecking=no'"
+  when: "'aws_server' in group_names"
+  delegate_to: localhost
+
+- name: Copy Helm charts for digital twin apps
+  ansible.posix.synchronize:
+    src: "{{ playbook_dir }}/../../helm-chart/digital-twin/"
+    dest: "{{ deploy_helm_charts_folder }}/"
+    recursive: true
+  when: "'aws_server' not in group_names"
+  delegate_to: localhost
+
+- name: Ensure correct owner and group
+  file:
+    path: "{{ deploy_helm_charts_folder }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    recurse: yes
+
+- name: Set ECR Secret to false for non-EC2
+  set_fact:
+    ecr_enabled: false
+  when: "'aws_server' not in group_names"
+
+- name: Set ECR Secret to true for EC2
+  set_fact:
+    ecr_enabled: true
+  when: "'aws_server' in group_names"
+
+- name: Deploy digital twin application services
+  ansible.builtin.command:
+    cmd: helm upgrade --install {{ deploy_helm_dt_release }} {{ deploy_helm_charts_folder }}
+         --namespace {{ deploy_helm_dt_namespace }} --create-namespace --wait --timeout 15m --rollback-on-failure
+         --set ecr_setup.enabled={{ ecr_enabled }}
+         --set backend.containers.api_service.image={{ docker_registry }}/backend_api_service
+         --set backend.containers.edge_server.image={{ docker_registry }}/backend_edge_server
+         --set frontend.containers.app.image={{ docker_registry }}/frontend_digital_twin_app
+  environment:
+    KUBECONFIG: "/home/{{ ansible_user }}/.kube/config" 
+

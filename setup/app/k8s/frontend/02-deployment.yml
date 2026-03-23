@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3d-dev-cluster-server-0
+      containers:
+        - name: frontend
+          image: localhost:6000/frontend_digital_twin_app
+          ports:
+            - containerPort: 8501
+          env:
+            - name: BACKEND_API_URL
+              value: http://backend-service:8000/data
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"

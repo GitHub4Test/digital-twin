@@ -1,0 +1,11 @@
+---
+
+- name: Remove frontend repository
+  ansible.builtin.file: 
+    path: "{{ frontend_service_path }}"
+    state: absent
+
+- name: Remove frontend repository
+  ansible.builtin.file: 
+    path: "{{ frontend_k8s_service_path }}"
+    state: absent

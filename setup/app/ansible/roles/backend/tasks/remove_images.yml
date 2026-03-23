@@ -1,0 +1,13 @@
+---
+
+- name: remove backend_edge_server image
+  community.docker.docker_image:
+    name: "{{ docker_registry }}/backend_edge_server"
+    state: absent
+  delegate_to: localhost
+
+- name: remove backend_api_service image
+  community.docker.docker_image:
+    name: "{{ docker_registry }}/backend_api_service"
+    state: absent
+  delegate_to: localhost  

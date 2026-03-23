@@ -1,0 +1,49 @@
+frontend:
+  replicaCount: 1
+  containers:
+    app:
+      image: ""
+      tag: latest
+  service:
+    type: NodePort
+    port: 8501
+    nodeport: 30070
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1024Mi"
+      cpu: "500m"
+  ingress:
+    enabled: false
+    host: dt-frontend.local
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    tls: []
+    namespace: default
+
+backend:
+  replicaCount: 1
+  containers:
+    api_service:
+      image: ""
+      tag: latest
+    edge_server:
+      image: ""
+      tag: latest
+  service:
+    type: TCP
+    port: 8000
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1024Mi"
+      cpu: "500m"
+
+ecr_setup:
+  enabled: false
+  imagePullSecretName: ecr-secret
+  

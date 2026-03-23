@@ -1,0 +1,20 @@
+---
+
+- name: Setup Apps on raspberrypi
+  hosts: raspberrypi
+  vars:
+    operation: install
+    install_order:
+      - role: local_docker_registry
+        delegate_to: localhost
+      # - role: backend
+      # - role: frontend
+      - role: deploy_helm
+  tasks:
+    - name: Run roles in order
+      ansible.builtin.include_role:
+        name: "{{ item }}"
+      loop: "{{ install_order if operation == 'install' else install_order | reverse }}"
+      loop_control:
+        label: "{{ item }}"
+      tags: "{{ operation }}"

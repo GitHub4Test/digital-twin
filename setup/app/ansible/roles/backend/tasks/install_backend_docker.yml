@@ -1,0 +1,34 @@
+---
+
+- name: Build backend images and start the containers
+  ansible.builtin.shell:
+    cmd: cd "{{ backend_service_path }}" && docker compose up -d
+  become: true
+  become_user: "{{ ansible_user }}"
+
+- name: Create systemd service file for digital-twin
+  ansible.builtin.template:
+    src: ../templates/digital-twin.service.j2
+    dest: /etc/systemd/system/digital-twin-backend.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Enable digital-twin service
+  ansible.builtin.systemd:
+    name: digital-twin-backend
+    enabled: true
+    state: started
+
+- name: Display deployment status
+  ansible.builtin.debug:
+    msg:
+      - "Backend services deployed successfully!"
+      - "Docker service: active and running"
+      - "Digital Twin services: managed by systemd"
+      - "Monitor status: systemctl status digital-twin"
+      - "View logs: journalctl -u digital-twin -f"

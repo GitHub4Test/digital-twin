@@ -1,0 +1,15 @@
+---
+- name: Deploy Frontend services using Kubernetes
+  kubernetes.core.k8s:
+    kubeconfig: "{{ lookup('env','HOME') + '/.kube/config' }}"
+    state: present
+    src: "{{ item }}"
+    namespace: "{{ frontend_k8s_namespace }}"
+  loop: "{{ lookup('fileglob', frontend_k8s_service_path + '/*.yml', wantlist=True) | sort }}"  
+  register: frontend_apply
+
+- name: Show result
+  debug:
+    var: frontend_apply
+
+

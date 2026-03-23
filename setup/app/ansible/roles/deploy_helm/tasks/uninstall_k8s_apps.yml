@@ -1,0 +1,7 @@
+---
+
+- name: Uninstall release '{{ deploy_helm_dt_release }}' in namespace '{{ deploy_helm_dt_namespace }}'
+  ansible.builtin.command:
+    cmd: helm uninstall {{ deploy_helm_dt_release }} -n {{ deploy_helm_dt_namespace }}
+  environment:
+    KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"

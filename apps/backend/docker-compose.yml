@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  api_service:
+    build:
+      context: ./api_service
+      dockerfile: Dockerfile
+      network: host   # Host network only for build
+    container_name: api_service
+    ports:
+      - "8000:8000"
+    volumes:
+      - database_data:/data
+    environment:
+      - DB_PATH=/data/database.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - digital-twin-network
+    restart: unless-stopped
+
+  edge_server:
+    build:
+      context: ./edge_server
+      dockerfile: Dockerfile
+      network: host   # Host network only for build
+    container_name: edge_server
+    environment:
+      - BACKEND_API_URL=http://backend:8000/update
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - digital-twin-network
+    restart: unless-stopped
+^
+volumes:
+  database_data:
+    driver: local
+
+networks:
+  digital-twin-network:
+    driver: bridge

@@ -1,0 +1,6 @@
+---
+
+deploy_helm_dt_release: "digital-twin"
+deploy_helm_dt_namespace: "default"
+
+deploy_helm_charts_folder: "/home/{{ ansible_user }}/helm/digital-twin"

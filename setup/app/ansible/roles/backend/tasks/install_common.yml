@@ -1,0 +1,41 @@
+---
+
+- name: Create {{ backend_service_path }} directory
+  ansible.builtin.file:
+    path: "{{ backend_service_path }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    # group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Clone or sync backend repository
+  become: false
+  ansible.posix.synchronize:
+    src: "{{ playbook_dir }}/../../apps/backend/"
+    dest: "{{ backend_service_path }}"
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=__pycache__"
+      - "--exclude=.env"
+      - "--exclude=*.pyc"
+      - "--exclude=.venv"
+    delete: true
+    recursive: true
+  delegate_to: localhost
+
+- name: Copy backend k8s repository
+  become: false
+  ansible.posix.synchronize:
+    src: "{{ playbook_dir }}/../../k8s/backend/"
+    dest: "{{ backend_k8s_service_path }}"
+    delete: true
+    recursive: true
+  delegate_to: localhost
+
+- name: Set permissions on backend directory
+  ansible.builtin.file:
+    path: "{{ backend_service_path }}"
+    owner: "{{ ansible_user }}"
+    # group: "{{ ansible_user }}"
+    mode: '0755'
+    recurse: true

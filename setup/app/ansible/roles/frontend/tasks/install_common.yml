@@ -1,0 +1,34 @@
+---
+
+- name: Create "{{ frontend_service_path }}" directory
+  ansible.builtin.file:
+    path: "{{ frontend_service_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Clone or sync Digital Twin repository
+  ansible.builtin.synchronize:
+    src: "{{ playbook_dir }}/../../apps/frontend/"
+    dest: "{{ frontend_service_path }}"
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=__pycache__"
+      - "--exclude=.env"
+      - "--exclude=*.pyc"
+      - "--exclude=.venv"
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Copy k8s repository
+  become: false
+  ansible.posix.synchronize:
+    src: "{{ playbook_dir }}/../../k8s/frontend/"
+    dest: "{{ frontend_k8s_service_path }}"
+    delete: true
+    recursive: true
+  delegate_to: localhost
+
+- name: Set permissions on digital-twin directory
+  ansible.builtin.file:
+    path: "{{ frontend_service_path }}"
+    mode: '0755'
+    recurse: true

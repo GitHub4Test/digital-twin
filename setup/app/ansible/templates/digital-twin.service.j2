@@ -1,0 +1,21 @@
+[Unit]
+Description=Digital Twin Microservices
+Documentation=https://github.com/your-org/digital-twin
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User={{ ansible_user }}
+WorkingDirectory=/opt/digital-twin
+Environment="PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+ExecStart=/usr/local/bin/docker-compose up
+ExecStop=/usr/local/bin/docker-compose down
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

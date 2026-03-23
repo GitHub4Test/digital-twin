@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-frontend"
+  labels:
+    app: "{{ .Release.Name }}-frontend"
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}-frontend"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}-frontend"
+    spec:
+{{- if .Values.ecr_setup.enabled }}
+      imagePullSecrets:
+        - name: {{ .Values.ecr_setup.imagePullSecretName | quote }}
+{{- end }}
+      # nodeSelector:
+      #   kubernetes.io/hostname: k3d-dev-cluster-server-0
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.containers.app.image }}:{{ .Values.frontend.containers.app.tag }}"
+          ports:
+            - containerPort: {{ .Values.frontend.service.port }}
+          env:
+            - name: BACKEND_API_URL
+              value: http://{{ .Release.Name }}-backend:8000/data
+          resources:
+            requests:
+              memory: {{ .Values.frontend.resources.requests.memory }}
+              cpu: {{ .Values.frontend.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.frontend.resources.limits.memory }}
+              cpu: {{ .Values.frontend.resources.limits.cpu }}

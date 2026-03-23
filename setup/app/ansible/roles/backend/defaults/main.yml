@@ -1,0 +1,6 @@
+---
+
+backend_service_path: /opt/digital-twin/backend
+backend_k8s_service_path: /opt/digital-twin/k8s-backend
+backend_local_registry_ip: localhost
+backend_k8s_namespace: default

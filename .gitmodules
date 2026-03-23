@@ -1,0 +1,3 @@
+[submodule "setup/infra"]
+	path = setup/infra
+	url = git@github.com:GitHub4Test/local-infra.git

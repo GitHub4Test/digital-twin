@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3d-dev-cluster-server-0
+      containers:
+        - name: backend-api-service
+          image: localhost:6000/backend_api_service
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DB_PATH
+              value: /data/database.db
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: database-data
+              mountPath: /data
+        - name: backend-edge-server
+          image: localhost:6000/backend_edge_server
+          env:
+            - name: BACKEND_API_URL
+              value: http://localhost:8000/update
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+      volumes:
+        - name: database-data
+          emptyDir: {}

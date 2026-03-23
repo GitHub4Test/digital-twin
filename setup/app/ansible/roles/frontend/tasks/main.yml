@@ -1,0 +1,19 @@
+---
+
+- name: Install -> Frontend Services
+  ansible.builtin.include_tasks:
+    file: build_images.yml
+    apply:
+      tags:
+        - install
+  tags:
+    - install
+
+- name: Uninstall -> Frontend Services
+  ansible.builtin.include_tasks:
+    file: remove_images.yml
+    apply:
+      tags:
+        - uninstall
+  tags:
+    - uninstall
