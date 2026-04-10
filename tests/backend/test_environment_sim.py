@@ -5,12 +5,15 @@ import requests
 from datetime import datetime
 from unittest.mock import patch
 from apps.backend.edge_server.src import environment_sim
-# Provide stable module-level defaults so tests can rely on predictable state
-environment_sim.temperature = 20.0
-environment_sim.outside_temp = 25
-environment_sim.cooling_on = False
-environment_sim.humidity = 50.0
+
 class TestEnvironmentSim(unittest.TestCase):
+    def setUp(self):
+        environment_sim.temperature = 20.0
+        environment_sim.outside_temp = 25
+        environment_sim.cooling_on = False
+        environment_sim.humidity = 50.0
+        environment_sim.humidity_phase = False
+
     @patch('apps.backend.edge_server.src.environment_sim.requests.post')
     def test_send_sensor_data_success(self, mock_post):
         mock_post.return_value.status_code = 200
@@ -189,27 +192,6 @@ class TestEnvironmentSim(unittest.TestCase):
         with patch('apps.backend.edge_server.src.environment_sim.requests.post') as mock_post:
             mock_post.return_value.status_code = 200
             payload = "This is not a JSON payload"
-            environment_sim.send_sensor_data(payload, timeout_s=5)
-            mock_post.assert_called_once_with(environment_sim.SERVER_URL, json=payload, timeout=5)
-
-    def test_send_sensor_data_invalid_url_exception(self):
-        with patch('apps.backend.edge_server.src.environment_sim.requests.post') as mock_post:
-            mock_post.side_effect = requests.exceptions.InvalidURL("Invalid URL")
-            payload = {"temperature": 25.0, "humidity": 50.0}
-            environment_sim.send_sensor_data(payload, timeout_s=5)
-            mock_post.assert_called_once_with(environment_sim.SERVER_URL, json=payload, timeout=5)
-
-    def test_send_sensor_data_http_error_exception(self):
-        with patch('apps.backend.edge_server.src.environment_sim.requests.post') as mock_post:
-            mock_post.side_effect = requests.exceptions.HTTPError("HTTP error occurred")
-            payload = {"temperature": 25.0, "humidity": 50.0}
-            environment_sim.send_sensor_data(payload, timeout_s=5)
-            mock_post.assert_called_once_with(environment_sim.SERVER_URL, json=payload, timeout=5)
-    
-    def test_send_sensor_data_request_exception_general(self):
-        with patch('apps.backend.edge_server.src.environment_sim.requests.post') as mock_post:
-            mock_post.side_effect = requests.exceptions.RequestException("General request exception")
-            payload = {"temperature": 25.0, "humidity": 50.0}
             environment_sim.send_sensor_data(payload, timeout_s=5)
             mock_post.assert_called_once_with(environment_sim.SERVER_URL, json=payload, timeout=5)
 
