@@ -2,8 +2,20 @@ import time
 import math
 import requests
 import os
+import random
 from datetime import datetime
 from . import logger
+
+# Module-level defaults so functions and importing tests have predictable state
+SERVER_URL = os.environ.get("BACKEND_API_URL", "http://localhost:8000/update")
+
+# Simulation state defaults
+temperature = 22.0
+outside_temp = 30
+cooling_on = False
+humidity = 50.0
+# internal toggle to create small deterministic humidity oscillation
+humidity_phase = False
 
 def extract_simulated_payload() -> dict:
    
@@ -23,9 +35,12 @@ def extract_simulated_payload() -> dict:
     elif temperature < 24:
         cooling_on = False
     
-    # Simulate humidity fluctuation
+    # Simulate humidity fluctuation with a small deterministic oscillation
     global humidity
-    humidity += (50 - humidity) * 0.02 + (0.1 if cooling_on else -0.05)
+    global humidity_phase
+    humidity_phase = not humidity_phase
+    phase_val = 0.2 if humidity_phase else -0.2
+    humidity += (50 - humidity) * 0.02 + (0.1 if cooling_on else -0.05) + phase_val + random.uniform(-0.05, 0.05)
     humidity = max(30, min(80, humidity))
     
     payload = {
@@ -47,13 +62,6 @@ def send_sensor_data(payload: dict, timeout_s: int):
     
 if __name__ == "__main__":
 
-    # Backend API service URL - configurable via environment variable
-    SERVER_URL = os.environ.get("BACKEND_API_URL", "http://localhost:8000/update")
-
-    temperature = 22.0
-    outside_temp = 30
-    cooling_on = False
-    humidity = 50.0    
     logger.info(f"Connecting to backend API at: {SERVER_URL}")
 
     # run in a loop to get continuously sensor values

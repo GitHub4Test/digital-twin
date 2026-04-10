@@ -77,8 +77,11 @@ Notes:
 1. Start backend and frontend with Docker Compose (from repo root):
 
 ```bash
+# Terminal 1
 cd apps/backend && docker-compose up --build
-cd ../../apps/frontend && docker-compose up --build
+
+# Terminal 2 (from repo root)
+cd apps/frontend && docker-compose up --build
 ```
 
 2. API service: apps/backend/api_service — see `src/main.py` for routes and configuration.
