@@ -23,7 +23,13 @@ logger.info("Logger initialized")
 
 st.title("🌍 Raspberry Pi 4 Digital Twin")
 
+# Function to fetch data from the backend API with error handling and logging
 def get_data(timeout_s: int = 5):
+    """
+    Fetches data from the backend API with error handling and logging.
+    @param timeout_s: Timeout in seconds for the API request (default: 5)
+    @return: List of data received from the backend, or an empty list if an error occurs
+    """
 
     # Get backend URL from environment variable, default to localhost for local development    
     BACKEND_API_URL = os.environ.get("BACKEND_API_URL", "http://localhost:8000/data")
@@ -42,9 +48,14 @@ def get_data(timeout_s: int = 5):
     
     return data
 
+# Function to display current and predicted temperature
 def display_current_and_predicted_temparature(current_received_data):
-
-    df = pd.DataFrame(data, columns=["timestamp", "temperature", "humidity"])
+    """
+    Displays the current temperature and humidity data along with the predicted next temperature.
+    @param current_received_data: List of data received from the backend, expected to contain timestamp, temperature, and humidity
+    @return: Predicted next temperature
+    """
+    df = pd.DataFrame(current_received_data, columns=["timestamp", "temperature", "humidity"])
     
     if not df.empty:
         df = df.sort_values("timestamp")

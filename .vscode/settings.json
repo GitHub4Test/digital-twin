@@ -1,0 +1,19 @@
+{
+    "ansible.python.interpreterPath": "/Library/Frameworks/Python.framework/Versions/3.8/bin/python3",
+    "python-envs.pythonProjects": [
+        {
+            "path": "apps/backend/edge_server",
+            "envManager": "ms-python.python:system",
+            "packageManager": "ms-python.python:pip"
+        }
+    ],
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
+}
