@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}-frontend
 spec:
-  type: {{ .Values.frontend.service.type }}
   selector:
     app: {{ .Release.Name }}-frontend
   ports:
-    - port: {{ .Values.frontend.service.port }}
+    - protocol: {{ .Values.frontend.service.type }}
+      port: {{ .Values.frontend.service.port }}
       targetPort: {{ .Values.frontend.service.port }}
-      nodePort: {{ .Values.frontend.service.nodeport }}
+  type: ClusterIP

@@ -53,7 +53,7 @@ kubectl apply -f setup/k8s/frontend -n digital-twin
 
 ```bash
 # Example: run the app playbook (inventory and vault may be required)
-ansible-playbook -i setup/app/ansible/hosts setup/app/ansible/playbooks/apps.yml
+ansible-playbook -i setup/app/ansible/hosts setup/app/ansible/playbooks/apps.yml  -e operation="install/uninstall" -t install/uninstall
 ```
 
 - Infrastructure provisioning (Terraform / scripts):
