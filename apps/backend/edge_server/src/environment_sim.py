@@ -7,7 +7,7 @@ from datetime import datetime
 from . import logger
 
 # Module-level defaults so functions and importing tests have predictable state
-SERVER_URL = os.environ.get("BACKEND_API_URL", "http://localhost:8000/update")
+SERVER_URL = os.environ.get("BACKEND_API_URL", "http://localhost:8000/api/v1/readings")
 
 # Simulation state defaults
 temperature = 22.0

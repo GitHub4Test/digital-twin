@@ -42,6 +42,18 @@ backend:
     limits:
       memory: "1024Mi"
       cpu: "500m"
+  readinessProbe:
+    httpGet:
+      path: /api/v1/ready
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  livenessProbe:
+    httpGet:
+      path: /api/v1/live
+    initialDelaySeconds: 10
+    periodSeconds: 20
+    failureThreshold: 3
 
 ecr_setup:
   enabled: false

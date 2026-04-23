@@ -3,26 +3,28 @@ Application factory and main FastAPI app setup
 """
 
 from fastapi import FastAPI
-import os
-import sys
 from src.database import Database
 from src.routes import router
-
 from . import logger
 
 app = FastAPI(
     title="Digital Twin Backend",
     description="Unified backend service for sensor data management",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    contact={
+        "name": "Digital Twin Team",
+        "email": "admin@example.com",
+    },
 )
 
-# Include routes
 app.include_router(router)
 
-# Initialize database on startup
+
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database on service startup"""
     logger.info("Starting backend application and initializing database")
     db = Database()
     db.init()

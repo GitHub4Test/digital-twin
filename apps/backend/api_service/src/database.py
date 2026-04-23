@@ -12,7 +12,7 @@ class Database:
     """SQLite database handler for sensor readings"""
     
     def __init__(self, db_path: str = None):
-        self.db_path = db_path or os.environ.get("DB_PATH", "/data/database.db")
+        self.db_path = db_path or os.environ.get("DB_PATH", "./data/database.db")
     
     def init(self):
         """Initialize database with sensor table"""
@@ -102,3 +102,15 @@ class Database:
             return {"status": "success", "message": "All sensor data cleared"}
         except Exception as e:
             raise Exception(f"Database error: {str(e)}")
+
+    def health_check(self) -> bool:
+        """Check if database connection is alive"""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            conn.close()
+            return True
+        except Exception:
+            return False
