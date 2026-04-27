@@ -206,7 +206,7 @@ docker run -p 8000:8000 -v database_data:/data digital-twin-backend
 
 ### Health Check
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 ```
 
 ## 📊 Database
@@ -231,7 +231,7 @@ Data persists in Docker volume `/data/database.db`
 - Clear and reinitialize: `DELETE FROM sensor;`
 
 ### Connection refused
-- Ensure service is running: `curl http://localhost:8000/health`
+- Ensure service is running: `curl http://localhost:8000/api/v1/health`
 - Check port 8000 is available: `lsof -i :8000`
 
 ### Poetry lock issues

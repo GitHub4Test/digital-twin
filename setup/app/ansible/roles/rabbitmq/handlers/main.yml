@@ -1,0 +1,5 @@
+---
+
+- name: Restart rabbitmq
+  ansible.builtin.command:
+    cmd: kubectl rollout restart statefulset rabbitmq -n messaging

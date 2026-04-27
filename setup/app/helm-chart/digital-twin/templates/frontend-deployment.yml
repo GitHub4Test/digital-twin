@@ -27,7 +27,7 @@ spec:
             - containerPort: {{ .Values.frontend.service.port }}
           env:
             - name: BACKEND_API_URL
-              value: http://{{ .Release.Name }}-backend:8000/data
+              value: http://{{ .Release.Name }}-backend:8000/api/v1/readings
           resources:
             requests:
               memory: {{ .Values.frontend.resources.requests.memory }}

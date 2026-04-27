@@ -1,0 +1,13 @@
+---
+
+- name: Uninstall release '{{ rabbitmq_release_name }}' in namespace '{{ rabbitmq_namespace }}'
+  ansible.builtin.command:
+    cmd: helm uninstall {{ rabbitmq_release_name }} -n {{ rabbitmq_namespace }}
+  environment:
+    KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+
+- name: Remove rabbitmq values directory
+  ansible.builtin.file:
+    path: "{{ rabbitmq_values_file }}"
+    state: absent
+

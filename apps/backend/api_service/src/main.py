@@ -3,8 +3,10 @@ Application factory and main FastAPI app setup
 """
 
 from fastapi import FastAPI
-from src.database import Database
-from src.routes import router
+from src.db.database import db
+from src.rabbitmq.rabbitmq import rabbitmq
+from src.routes.common import router as common_router
+from src.routes.sensor import router as sensor_router
 from . import logger
 
 app = FastAPI(
@@ -20,16 +22,20 @@ app = FastAPI(
     },
 )
 
-app.include_router(router)
-
+app.include_router(common_router)
+app.include_router(sensor_router)
 
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting backend application and initializing database")
-    db = Database()
     db.init()
     logger.info("Database initialized and backend is ready")
+    await rabbitmq.connect()
 
+@app.on_event("shutdown")
+async def shutdown():
+    db.close()
+    await rabbitmq.close()
 
 if __name__ == "__main__":
     import uvicorn

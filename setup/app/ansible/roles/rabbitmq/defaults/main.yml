@@ -1,0 +1,29 @@
+---
+
+rabbitmq_release_name: "rabbitmq"
+rabbitmq_namespace: "messaging"
+rabbitmq_chart_name: "bitnami/rabbitmq"
+rabbitmq_user: admin
+rabbitmq_password: "admin"
+rabbitmq_erlang_cookie: "ChangeMeStrongCookie"
+rabbitmq_storage_size: 5Gi
+
+rabbitmq_root_url: "https://rabbitmq.local:30088"
+rabbitmq_sso_enabled: true
+rabbitmq_task_files:
+  - install_rabbitmq.yml
+  - "{{ 'keycloak.yml' if rabbitmq_sso_enabled else omit }}"
+
+rabbitmq_config_dir: /etc/rabbitmq
+rabbitmq_values_file: "/tmp/rabbitmq-values.yml"
+
+keycloak_url: "http://keycloak.local:8080"
+keycloak_public_url: "https://keycloak.local:8443"
+keycloak_realm: "homelab"
+
+keycloak_admin_user: "admin"
+keycloak_admin_password: "admin"
+
+rabbitmq_caddy_container_name: keycloak-caddy
+rabbitmq_caddy_root_ca_container_path: /data/caddy/pki/authorities/local/root.crt
+rabbitmq_caddy_root_ca_local_path: /tmp/keycloak-caddy-root.crt

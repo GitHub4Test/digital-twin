@@ -106,7 +106,7 @@ class Database:
     def health_check(self) -> bool:
         """Check if database connection is alive"""
         try:
-            conn = self.get_connection()
+            conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute("SELECT 1")
             cursor.fetchone()
@@ -114,3 +114,5 @@ class Database:
             return True
         except Exception:
             return False
+
+db = Database()

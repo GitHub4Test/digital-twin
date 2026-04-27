@@ -2,20 +2,22 @@
 
 - name: Build backend images and push to docker registry
   ansible.builtin.command:
-    cmd: docker buildx build 
-        --platform linux/amd64,linux/arm64 
-        -t "{{ docker_registry }}/{{ svc.image }}:latest" 
-        --cache-from=type=registry,ref={{ docker_registry }}/{{ svc.image }}:latest 
-        --push .
-  args:
-    chdir: "{{ playbook_dir }}/../../apps/{{ svc.root_dir }}"
-  async: 300
-  poll: 0
+    cmd: >-
+      docker buildx build
+      --progress=plain
+      --platform linux/amd64,linux/arm64
+      -t {{ docker_registry }}/{{ svc.image }}:latest
+      --cache-from=type=registry,ref={{ docker_registry }}/{{ svc.image }}:latest
+      --push .
+    chdir: "{{ playbook_dir }}/../../../../apps/{{ svc.root_dir }}"
+  # async: 300
+  # poll: 0
   environment:
     DOCKER_BUILDKIT: "1"
   loop: "{{ root_dirs }}"
   loop_control:
     loop_var: svc
+    label: "{{ svc.image }}"
   vars:
     root_dirs:
       - { root_dir: backend/api_service, image: backend_api_service }

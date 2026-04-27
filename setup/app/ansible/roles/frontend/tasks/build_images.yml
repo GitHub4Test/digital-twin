@@ -8,7 +8,7 @@
         --cache-from=type=registry,ref={{ docker_registry }}/frontend_digital_twin_app:latest 
         --push .
   args:
-    chdir: "{{ playbook_dir }}/../../apps/frontend/app"
+    chdir: "{{ playbook_dir }}/../../../../apps/frontend/app"
   register: built_result
   environment:
     DOCKER_BUILDKIT: "1"

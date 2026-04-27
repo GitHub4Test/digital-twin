@@ -35,10 +35,10 @@ backend/
 python environment_sim.py
 
 # With custom backend URL
-BACKEND_API_URL=http://192.168.1.100:8000/update python environment_sim.py
+BACKEND_API_URL=http://192.168.1.100:8000/api/v1/readings python environment_sim.py
 
 # With Docker backend
-BACKEND_API_URL=http://backend:8000/update python environment_sim.py
+BACKEND_API_URL=http://backend:8000/api/v1/readings python environment_sim.py
 ```
 
 ## 🌡️ Simulation Model
@@ -87,10 +87,10 @@ Content-Type: application/json
 ### Environment Variables
 
 **Backend Connection**
-- `BACKEND_API_URL` - Full URL to backend /update endpoint
-  - Default: `http://localhost:8000/update`
-  - Docker: `http://backend:8000/update`
-  - Remote: `http://192.168.1.x:8000/update`
+- `BACKEND_API_URL` - Full URL to backend /readings endpoint
+  - Default: `http://localhost:8000/api/v1/readings`
+  - Docker: `http://backend:8000/api/v1/readings`
+  - Remote: `http://192.168.1.x:8000/api/v1/readings`
 
 ### Simulation Parameters (Hard-coded)
 
@@ -115,7 +115,7 @@ time.sleep(3)               # Seconds between readings
 ## 📊 Output Example
 
 ```
-Connecting to backend API at: http://localhost:8000/update
+Connecting to backend API at: http://localhost:8000/api/v1/readings
 [2026-02-15T10:30:00.123456] Sensor reading sent: {'timestamp': '2026-02-15T10:30:00.123456', 'temperature': 22.01, 'humidity': 50.02}
 [2026-02-15T10:30:03.234567] Sensor reading sent: {'timestamp': '2026-02-15T10:30:03.234567', 'temperature': 22.14, 'humidity': 50.05}
 [2026-02-15T10:30:06.345678] Sensor reading sent: {'timestamp': '2026-02-15T10:30:06.345678', 'temperature': 22.41, 'humidity': 50.08}
@@ -128,10 +128,10 @@ Connecting to backend API at: http://localhost:8000/update
 ```
 [timestamp] Connection error: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded
 ```
-- Verify backend is running: `curl http://localhost:8000/health`
+- Verify backend is running: `curl http://localhost:8000/api/v1/health`
 - Check `BACKEND_API_URL` is correct
 - Ensure port 8000 is accessible
-- For Docker: use `http://backend:8000/update`
+- For Docker: use `http://backend:8000/api/v1/readings`
 
 ### Server Error
 ```

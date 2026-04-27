@@ -5,3 +5,5 @@
     cmd: helm uninstall {{ deploy_helm_dt_release }} -n {{ deploy_helm_dt_namespace }}
   environment:
     KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+  ignore_errors: true
+  

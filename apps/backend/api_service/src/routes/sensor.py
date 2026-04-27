@@ -2,7 +2,8 @@
 API routes for sensor data management
 """
 
-from fastapi import APIRouter, HTTPException, Query, status
+from uuid import uuid4
+from fastapi import APIRouter, HTTPException, status, Query
 from src.models import (
     SensorReadingCreate,
     SensorReadingResponse,
@@ -10,27 +11,13 @@ from src.models import (
     MessageResponse,
     ErrorResponse,
 )
-from src.database import Database
 
-router = APIRouter(
-    prefix="/api/v1",
-    tags=["sensor-data"]
-)
-db = Database()
+from src.rabbitmq.events import SensorReadingEvent
+from src.rabbitmq.publisher import publish_sensor_event
+from src.routes.common import db
 
+router = APIRouter(prefix="/api/v1", tags=["sensor-data"])
 
-@router.get(
-    "/health",
-    response_model=HealthCheckResponse,
-    summary="Health check",
-    description="Returns the health status of the backend service."
-)
-async def health_check():
-    return HealthCheckResponse(
-        status="healthy",
-        service="backend",
-        version="1.0.0"
-    )
 
 @router.post(
     "/readings",
@@ -54,6 +41,33 @@ async def create_sensor_reading(reading: SensorReadingCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post(
+    "/readings/event",
+    response_model=MessageResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Accept sensor reading",
+    description="Accept a sensor reading and enqueue it for asynchronous processing."
+)
+async def create_sensor_reading_event(reading: SensorReadingCreate):
+    print("Inside create_sensor_reading_event")
+    
+    try:
+        event = SensorReadingEvent(
+            event_id=uuid4(),
+            timestamp=reading.timestamp,
+            temperature=reading.temperature,
+            humidity=reading.humidity,
+        )
+
+        await publish_sensor_event(event.model_dump(mode="json"))
+
+        return MessageResponse(
+            message="Sensor reading accepted for processing"
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
 @router.get(
     "/readings",
     response_model=list[SensorReadingResponse],
@@ -94,38 +108,3 @@ async def clear_sensor_data():
         return MessageResponse(message="All sensor readings cleared successfully")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@router.get(
-    "/live",
-    response_model=HealthCheckResponse,
-    summary="Liveness probe"
-)
-async def liveness_check():
-    return HealthCheckResponse(
-        status="alive",
-        service="backend",
-        version="1.0.0"
-    )
-
-@router.get(
-    "/ready",
-    response_model=HealthCheckResponse,
-    summary="Readiness probe",
-    description="Checks if the service is ready to accept traffic (DB connectivity)."
-)
-async def readiness_check():
-    try:
-        if not db.health_check():
-            raise Exception("Database not reachable")
-
-        return HealthCheckResponse(
-            status="ready",
-            service="backend",
-            version="1.0.0"
-        )
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Service not ready: {str(e)}"
-        )

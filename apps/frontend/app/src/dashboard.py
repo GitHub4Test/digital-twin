@@ -32,7 +32,7 @@ def get_data(timeout_s: int = 5):
     """
 
     # Get backend URL from environment variable, default to localhost for local development    
-    BACKEND_API_URL = os.environ.get("BACKEND_API_URL", "http://localhost:8000/data")
+    BACKEND_API_URL = os.environ.get("BACKEND_API_URL", "http://localhost:8000/api/v1/readings")
     
     try:
         logger.info(f"Requesting data from backend: {BACKEND_API_URL}")
