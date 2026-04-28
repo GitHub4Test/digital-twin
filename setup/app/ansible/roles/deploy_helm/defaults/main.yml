@@ -4,3 +4,5 @@ deploy_helm_dt_release: "digital-twin"
 deploy_helm_dt_namespace: "default"
 
 deploy_helm_charts_folder: "/home/{{ ansible_user }}/helm/digital-twin"
+
+deploy_helm_nexus_repo: nexus.local:5002 # nexus.local should be avaiable on target machine in: /etc/hosts

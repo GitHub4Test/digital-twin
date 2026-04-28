@@ -1,6 +1,0 @@
----
-
-frontend_service_path: /opt/digital-twin/frontend
-frontend_k8s_service_path: /opt/digital-twin/k8s-frontend
-frontend_local_registry_ip: localhost
-frontend_k8s_namespace: default

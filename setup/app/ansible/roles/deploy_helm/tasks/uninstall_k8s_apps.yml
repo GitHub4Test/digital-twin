@@ -6,4 +6,8 @@
   environment:
     KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
   ignore_errors: true
-  
+
+- name: Remove helm charts directory
+  ansible.builtin.file:
+    path: "{{ deploy_helm_charts_folder }}"
+    state: absent

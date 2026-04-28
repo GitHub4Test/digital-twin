@@ -5,17 +5,7 @@
   vars:
     operation: install
     install_order:
-      - role: local_docker_registry
-        delegate_to: localhost
-      # - role: backend
-      # - role: frontend
-      - role: keycloak
-        delegate_to: localhost
-      - role: keycloak_realm
-        delegate_to: localhost
-      - role: keycloak_https
-        delegate_to: localhost
-      - role: rabbitmq
+      # - role: rabbitmq
       - role: deploy_helm
   tasks:
     - name: Run roles in order

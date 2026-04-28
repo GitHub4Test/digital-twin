@@ -23,6 +23,7 @@ spec:
       containers:
         - name: frontend
           image: "{{ .Values.frontend.containers.app.image }}:{{ .Values.frontend.containers.app.tag }}"
+          imagePullPolicy: Always
           ports:
             - containerPort: {{ .Values.frontend.service.port }}
           env:

@@ -41,14 +41,31 @@
     ecr_enabled: true
   when: "'aws_server' in group_names"
 
+- name: Configure k3s to use local registry
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/rancher/k3s/registries.yaml
+    content: |
+      mirrors:
+        "{{ deploy_helm_nexus_repo }}":
+          endpoint:
+            - "http://{{ deploy_helm_nexus_repo }}"
+    mode: '0644'
+    
+- name: Ensure k3s is running
+  become: true
+  ansible.builtin.systemd:
+    name: k3s
+    state: restarted
+    enabled: true  
+
 - name: Deploy digital twin application services
   ansible.builtin.command:
     cmd: helm upgrade --install {{ deploy_helm_dt_release }} {{ deploy_helm_charts_folder }}
          --namespace {{ deploy_helm_dt_namespace }} --create-namespace --wait --timeout 15m --rollback-on-failure
          --set ecr_setup.enabled={{ ecr_enabled }}
-         --set backend.containers.api_service.image={{ docker_registry }}/backend_api_service
-         --set backend.containers.edge_server.image={{ docker_registry }}/backend_edge_server
-         --set frontend.containers.app.image={{ docker_registry }}/frontend_digital_twin_app
+         --set backend.containers.api_service.image={{ deploy_helm_nexus_repo }}/api-service
+         --set backend.containers.edge_server.image={{ deploy_helm_nexus_repo }}/edge-server
+         --set frontend.containers.app.image={{ deploy_helm_nexus_repo }}/digital-twin-app
   environment:
-    KUBECONFIG: "/home/{{ ansible_user }}/.kube/config" 
-
+    KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
