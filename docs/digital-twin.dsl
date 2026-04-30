@@ -4,65 +4,113 @@ workspace "digital-twin-app" "Digital twin app for predict humidity based on tem
         user = person "User" "Digital-Twin User" "user"
         admin = person "Admin" "Digital-Twin Admin" "user"
 
-        # Exernal Systems -> 
+        # Exernal Systems
         sensorSystem = softwareSystem "TempSensor" "Temparature Sensor" "external"
 
         # Internal System
         digitaltwinSystem = softwareSystem "DigitalTwinApp" "Digital Twin System" {
-            dtUIContainer = container "UI" "Digital Twin Web Page" "Streamlit / Web App" "frontend"
-            dtAPIContainer = container "API Gateway" "Digital Twin FAST API Service" "FastAPI / Python" \
-            "backend" {
-                routerComp = component "Router" "API Router" "python"
-                readingsAPIComp = component "Readings API" "API services for readings" "python"
-                eventPublisherComp = component "Event Publisher" "Sensor Data Event Publisher" "python"
-                dbComp = component "DBHandler" "SQLiteDatabase service handler" "python"
+            
+            frontendContainer = container "UI" "Digital Twin Web Page" "Streamlit / Web App" "frontendContainer"
+            
+            backendContainer = container "Backend Service" "DT Backend Services" "Python" "backendContainer" {
+                apiComponent = component "API Gateway" "Digital Twin FAST API Service" "FastAPI / Python" \
+                "backendContainer" 
+                sensorComponent = component "Sensor Service" "Digital Twin Sensor Server Service" \
+                "Python" "backendContainer"
+                consumerComponent = component "ProcessEvent Service" "Digital Twin Consumer Event Service" \
+                "Python" "backendContainer"
             }
-            dtSensorContainer = container "Sensor Service" "Digital Twin Sensor Server Service" \
-            "Python" "backend"
-            dtProcessEventContainer = container "ProcessEvent Service" "Digital Twin Consumer Event Service" \
-            "Python" "backend" {
-                eventConsumerComp = component "Event Consumer" "Sensor Data Event Consumer" "python"
+            
+            sqliteContainer = container "SQLite" "SQLite Database" "SQLite" "database"            
+            messageContainer = container "RabbitMQ" "RabbitMQ event management service" "RabbitMQ" "eventSystem"
+            
+            # relationships between people and software systems
+            user -> digitaltwinSystem "Views temparature and humidity data in dashboard"
+            admin -> digitaltwinSystem "Views temparature and humidity data in dashboard"
+            digitaltwinSystem -> sensorSystem "reads the temparature sensor data"
+
+            # relationships to/from containers
+            user -> frontendContainer "Visits dt-frontendContainer.local using HTTP" {
+                tags "Logical"
             }
-            dtDBContainer = container "DB" "Digital Twin DB Service" "SQLite" "database"
-            dtMessagingContainer = container "RabbitMQ" "RabbitMQ event management service" "RabbitMQ" "eventSystem"
+            admin -> frontendContainer "Visits dt-frontendContainer.local using HTTP" {
+                tags "Logical"
+            }
+
+            frontendContainer -> apiComponent "Calls GET /readings API" {
+                tags "Logical"
+            }
+
+            apiComponent -> sqliteContainer "Uses CRUD operations with sensor data"
+            apiComponent -> messageContainer "Publishes the sensor data into RabbitMQ" {
+                tags "Logical"
+            }
+
+            sensorComponent -> sensorSystem "Reads the temparature sensor data"
+
+            consumerComponent -> messageContainer "Processes sensor data event from RabbitMQ" {
+                tags "Logical"
+            }
+            consumerComponent -> sqliteContainer "Stores sensor data"
+
+            # relationships to/from components
+            sensorComponent -> apiComponent "Calls POST /readings API"
         }
 
-        # relationships between people and software systems
-        user -> digitaltwinSystem "Views temparature and humidity data in dashboard"
-        admin -> digitaltwinSystem "Views temparature and humidity data in dashboard"
-        digitaltwinSystem -> sensorSystem "reads the temparature sensor data"
+        # Logging System
+        loggingSystem = softwareSystem "Logging" "Logging System" {
+            
+            lokiContainer = container "Loki" "Log aggregation backendContainer" "Loki"
+            fluentbitContainer = container "Fluent Bit" "Collects and forwards container logs" "Fluent Bit"
 
-        # relationships to/from containers
-        user -> dtUIContainer "Visits dt-frontend.local using HTTP" {
-            tags "Logical"
-        }
-        admin -> dtUIContainer "Visits dt-frontend.local using HTTP" {
-            tags "Logical"
-        }
+            # relationships to/from containers
+            frontendContainer -> fluentbitContainer "Writes logs"
+            apiComponent -> fluentbitContainer "Writes logs"
+            sensorComponent -> fluentbitContainer "Writes logs"
+            consumerComponent -> fluentbitContainer "Writes logs"
 
-        dtUIContainer -> dtAPIContainer "Calls GET /readings API" {
-           tags "Logical"
+            fluentbitContainer -> lokiContainer "Ships logs"
         }
 
-        dtAPIContainer -> dtDBContainer "Uses CRUD operations with sensor data"
-        dtAPIContainer -> dtMessagingContainer "Publishes the sensor data into RabbitMQ" {
-           tags "Logical"
+        # Monitoring System
+        monitoringSystem = softwareSystem "Monitoring" "Observability Tools" {
+
+            grafanaSystem = container "Grafana Web App" "Dashboards" "Docker / Web App"
+            prometheusSystem = container "Prometheus" "Metrics" "Docker / Web App"
+            rancherSystem = container "Rancher Web browser" "K8s management" "HTTP"
+
+            # relationships between people and software systems
+            admin -> grafanaSystem "Views dashboards"
+            admin -> rancherSystem "Manages cluster"
+
+            # relationships to/from containers
+            frontendContainer -> prometheusSystem "Exposes /metrics" {
+                tags "Logical"
+            }
+            sensorComponent -> prometheusSystem "Exposes /metrics" {
+                tags "Logical"
+            }
+            apiComponent -> prometheusSystem "Exposes /metrics" {
+                tags "Logical"
+            }
+            consumerComponent -> prometheusSystem "Exposes /metrics" {
+                tags "Logical"
+            }
+
+            grafanaSystem -> prometheusSystem "Queries metrics"
+            grafanaSystem -> lokiContainer "Queries logs"
         }
 
-        dtSensorContainer -> dtAPIContainer "Calls POST /readings API"
-        dtSensorContainer -> sensorSystem "Reads the temparature sensor data"
-
-        dtProcessEventContainer -> dtMessagingContainer "Processes sensor data event from RabbitMQ" {
-           tags "Logical"
-        }
-        dtProcessEventContainer -> dtDBContainer "Stores sensor data"
-
-        # relationships to/from components
-        routerComp -> readingsAPIComp "Uses"
-        
         deploymentEnvironment "Homelab" {
             mac = deploymentNode "Mac" "User machine" "macOS" {
                 browser = infrastructureNode "Web Browser" "Chrome / Safari"
+
+                grafanaDeployment = infrastructureNode "Grafana" "Grafana Web Application" "Docker"
+
+                prometheusMasterDeployment = deploymentNode "Prometheus" "Prometheus Master" "Docker"
+
+                rancherUI = infrastructureNode "Rancher UI" "Chrome / Safari" "HTTP"
+   
             }
 
             raspberrypi = deploymentNode "Raspberry Pi" "Single-node K3s server" "Raspberry Pi OS / Linux" {
@@ -71,16 +119,14 @@ workspace "digital-twin-app" "Digital twin app for predict humidity based on tem
 
                     ingress = infrastructureNode "Traefik Ingress" "Exposes services to Mac browser"
 
-                    frontendNamespace = deploymentNode "default" "digital twin apps namespace" {
-                        frontendService = infrastructureNode "frontend-service" "Kubernetes Service"
-                        frontendPod = deploymentNode "frontend-pod" "Kubernetes Pod" {
-                            frontendInstance = containerInstance dtUIContainer
+                    frontendContainerNamespace = deploymentNode "default" "digital twin apps namespace" {
+                        frontendContainerService = infrastructureNode "frontendContainer-service" "Kubernetes Service"
+                        frontendContainerPod = deploymentNode "frontendContainer-pod" "Kubernetes Pod" {
+                            frontendContainerInstance = containerInstance frontendContainer
                         }
-                        backendService = infrastructureNode "backend-service" "Kubernetes Service"
-                        backendPod = deploymentNode "backend-pod" "Kubernetes Pod" {
-                            apiInstance = containerInstance dtAPIContainer
-                            consumerInstance = containerInstance dtProcessEventContainer
-                            sensorInstance = containerInstance dtSensorContainer
+                        backendContainerService = infrastructureNode "backendContainer-service" "Kubernetes Service"
+                        backendContainerPod = deploymentNode "backendContainer-pod" "Kubernetes Pod" {
+                            backendInstance = containerInstance backendContainer
 
                             sqlite = infrastructureNode "SQLite DB File" "Stored inside container filesystem or volume"
                         }
@@ -89,9 +135,37 @@ workspace "digital-twin-app" "Digital twin app for predict humidity based on tem
                     messagingNamespace = deploymentNode "messaging" "messaging namespace" {
                         rabbitmqService = infrastructureNode "rabbitmq-service" "Kubernetes Service"
                         rabbitmqPod = deploymentNode "rabbitmq-pod" "Kubernetes Pod" {
-                            rabbitmqInstance = containerInstance dtMessagingContainer
+                            rabbitmqInstance = containerInstance messageContainer
                         }
                     }
+
+                    loggingNs = deploymentNode "logging" "Kubernetes namespace" {
+                        lokiContainerSvc = infrastructureNode "lokiContainer-service" "Kubernetes Service"
+
+                        lokiContainerPod = deploymentNode "lokiContainer-pod" "Kubernetes Pod" {
+                            lokiContainerInstance = containerInstance lokiContainer
+                        }
+
+                        fluentbitContainerDaemonSet = deploymentNode "fluent-bit-daemonset" "Runs on each Kubernetes node" {
+                            fluentbitContainerInstance = containerInstance fluentbitContainer
+                        }
+                    }
+
+                    monitoringNs = deploymentNode "monitoring" "monitoring namespace"{
+                        prometheusSvc = infrastructureNode "prometheus-service" "Kubernetes Service"
+
+                        prometheusNode = deploymentNode "Prometheus (minion)" "Kubernetes Pod"{
+                            prometheusMinionDeployment = containerInstance prometheusSystem
+                        }
+                    }
+
+                    rancherNs = deploymentNode "cattle-system" "Kubernetes namespace" {
+                        rancherSvc = infrastructureNode "rancher-service" "Kubernetes Service"
+
+                        rancherPod = deploymentNode "rancher-pod" "Kubernetes Pod" {
+                            rancherDeployment = containerInstance rancherSystem
+                        }
+                    }                                                            
                 }
 
             sensor = deploymentNode "Hardware System" "" "Hardware" {
@@ -100,21 +174,34 @@ workspace "digital-twin-app" "Digital twin app for predict humidity based on tem
             }
 
             browser -> ingress "HTTP/HTTPS"
-            ingress -> frontendService "Routes traffic"
-            frontendService -> frontendInstance "Forwards requests"
+            ingress -> frontendContainerService "Routes traffic"
+            frontendContainerService -> frontendContainerInstance "Forwards requests"
 
-            frontendInstance -> backendService "HTTP REST API"
-            backendService -> apiInstance "Forwards requests"
+            frontendContainerInstance -> backendContainerService "HTTP REST API"
+            backendContainerService -> backendInstance "Forwards requests"
 
-            apiInstance -> rabbitmqService "publish the request"
+            backendInstance -> rabbitmqService "publish the request"
             rabbitmqService -> rabbitmqInstance "Forwards messages"
-            consumerInstance -> rabbitmqService "Consumes the request"
-            consumerInstance -> sqlite "adds the sensor data"
+            backendInstance -> rabbitmqService "Consumes the request"
+            backendInstance -> sqlite "adds the sensor data"
 
-            sensorInstance -> sensorNode "Reads the temparature data"
-            sensorInstance -> backendService "Sends the temparature and humidity data"
+            backendInstance -> sensorNode "Reads the temparature data"
+            backendInstance -> backendContainerService "Sends the temparature and humidity data"
 
-            apiInstance -> sqlite "creates, reads, puts or delete sensor data"
+            backendInstance -> sqlite "creates, reads, puts or delete sensor data"
+
+            fluentbitContainerInstance -> lokiContainerSvc "Pushes logs"
+            lokiContainerSvc -> lokiContainerInstance "Forwards queries"
+
+            prometheusSvc -> backendInstance "Scrapes metrics"
+            prometheusSvc -> frontendContainerInstance "Scrapes metrics"
+            prometheusSvc -> rabbitmqInstance "Scrapes metrics"
+
+            grafanaDeployment -> prometheusSvc "Queries metrics"
+            prometheusSvc -> prometheusMinionDeployment "Forwards queries"
+
+            grafanaDeployment -> lokiContainerSvc "Queries logs"
+
         }
     }    
 
@@ -139,16 +226,15 @@ workspace "digital-twin-app" "Digital twin app for predict humidity based on tem
             include *
             animation {
                 user sensorSystem
-                dtUIContainer
-                dtSensorContainer
-                dtProcessEventContainer
-                dtDBContainer
-                dtMessagingContainer
+                frontendContainer
+                backendContainer
+                sqliteContainer
+                messageContainer
             }
             autoLayout
         }
 
-        component dtAPIContainer "Components" {
+        component backendContainer "Components" {
             include *
             autoLayout
         }
@@ -156,21 +242,20 @@ workspace "digital-twin-app" "Digital twin app for predict humidity based on tem
         dynamic digitaltwinSystem "DigitalTwinFlow" {
             title "Showing dashboard with values of Humidity and Temparature Workflow"
 
-            user -> dtUIContainer "Opens UI"
-            dtUIContainer -> dtAPIContainer "GET /readings"
-            dtAPIContainer -> dtDBContainer "reads sensor data"
-            dtAPIContainer -> dtUIContainer "returns sensor data"
-            dtUIContainer -> user "shows data in dashboard"
+            user -> frontendContainer "Opens UI"
+            frontendContainer -> backendContainer "GET /readings"
+            backendContainer -> sqliteContainer "reads sensor data"
+            backendContainer -> frontendContainer "returns sensor data"
+            frontendContainer -> user "shows data in dashboard"
         }        
 
         dynamic digitaltwinSystem "ReadSensorDataFlow" {
             title "Read sensor data and add to database workflow"
 
-            dtSensorContainer -> sensorSystem "Reads the temparature sensor data"
-            dtSensorContainer -> dtAPIContainer "Calls POST /readings API"
-            dtAPIContainer -> dtMessagingContainer "Publishes the sensor data into RabbitMQ"
-            dtProcessEventContainer -> dtMessagingContainer "Processes sensor data event from RabbitMQ"
-            dtProcessEventContainer -> dtDBContainer "Stores sensor data"
+            backendContainer -> sensorSystem "Reads the temparature sensor data"
+            backendContainer -> messageContainer "Publishes the sensor data into RabbitMQ"
+            backendContainer -> messageContainer "Processes sensor data event from RabbitMQ"
+            backendContainer -> sqliteContainer "Stores sensor data"
         }
 
         deployment digitaltwinSystem "Homelab" "HomelabDeployment" {

@@ -1,3 +1,6 @@
+# Playground for Structurizr DSL
+https://playground.structurizr.com/
+ 
 # Generate diagrams
 https://docs.structurizr.com/export
 

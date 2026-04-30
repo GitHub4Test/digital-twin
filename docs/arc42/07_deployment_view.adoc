@@ -11,13 +11,13 @@
 
 [plantuml, format=svg, width=50%]   
 ....
-include::../diagrams/LiveDeployment.puml[]
+include::../diagrams/HomelabDeployment.puml[]
 ....
 
 **Legend**
 [plantuml, format=svg, width=50%]   
 ....
-include::../diagrams/LiveDeployment-key.puml[]
+include::../diagrams/HomelabDeployment-key.puml[]
 ....
 
 Motivation::
