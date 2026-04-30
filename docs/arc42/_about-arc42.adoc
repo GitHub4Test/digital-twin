@@ -1,0 +1,10 @@
+:jbake-menu: About
+
+:homepage: https://arc42.org
+
+:keywords: software-architecture, documentation, template, arc42
+
+[role="lead"]
+Software Architecture Documentation with arc42, C4 model and Documentation as Code
+
+

@@ -10,3 +10,8 @@ dist
 /*pycache*
 .buildx-cache
 buildkitd.toml
+diagrams/
+*.svg
+*.svg.cache
+*.pdf
+*.asciidoctor

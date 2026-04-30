@@ -1,0 +1,26 @@
+[[section-context-and-context]]
+== Context and Scope
+
+=== Business Context
+
+[plantuml, format=svg, width=70%]
+....
+include::../diagrams/SystemContext.puml[]
+....
+
+**Legende**
+
+[plantuml, format=svg, width=50%]
+....
+include::../diagrams/SystemContext-key.puml[]
+....
+
+<<<
+
+=== Technical Context
+
+**<Diagram or Table>**
+
+**<optionally: Explanation of technical interfaces>**
+
+**<Mapping Input/Output to Channels>**

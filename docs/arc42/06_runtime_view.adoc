@@ -1,0 +1,26 @@
+:diagram-server-url: https://kroki.io
+:diagram-server-type: kroki_io
+
+[[section-runtime-view]]
+== Runtime View
+
+=== Sign-In
+
+[plantuml, format=svg, width=25%]   
+....
+include::../diagrams/SignIn.puml[]
+....
+
+**Legende**
+[plantuml, format=svg, width=50%]   
+....
+include::../diagrams/SignIn-key.puml[]
+....
+
+* _<insert runtime diagram or textual description of the scenario>_
+* _<insert description of the notable aspects of the interactions between the
+building block instances depicted in this diagram.>_
+
+<<<
+
+=== <Runtime Scenario n>
