@@ -1,0 +1,72 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  ########################################################
+  # Build and push python packages and docker images to Nexus
+  ########################################################
+  build-push:
+    name: Build and push ${{ matrix.service_name }}
+    runs-on: self-hosted
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service_path: apps/backend
+
+          - service_path: apps/frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip pipx
+          pipx install poetry
+          pipx ensurepath
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.in-project true
+
+      - name: Build and push package/image
+        working-directory: ${{ matrix.service_path }}
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}        
+        run: |
+          chmod +x build/build_and_push_nexus.sh
+          ./build/build_and_push_nexus.sh
+
+  ########################################################
+  # Deploy to k3s using Ansible
+  ########################################################
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Ansible collections
+        run: |
+          ansible-galaxy collection install kubernetes.core
+          
+      - name: Deploy microservices
+        run: |
+          ansible-playbook \
+            setup/app/ansible/playbooks/apps.yml \
+            -i setup/app/hosts \
+            -e operation=install \
+            -tags install

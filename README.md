@@ -90,11 +90,30 @@ cd apps/frontend && docker-compose up --build
 
 ## Run tests
 
-Run the Python tests from the repo root:
+Pre-requisite - create 'venv' environments under each microservice folder with its dependencies
+1. Open digital-twin.code-workspace
+2. Run the tests using VS Code Test Integration plug-in
 
-```bash
-python -m pytest tests/
-```
+## Github CI/CD setup
+### Local github runner for MacOS ARM64 setup
+1. Create a folder
+   mkdir actions-runner && cd actions-runner
+2. Download the latest runner package
+   curl -o actions-runner-osx-arm64-2.334.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.334.0/actions-runner-osx-arm64-2.334.0.tar.gz
+3. Optional: Validate the hash
+   echo "760899b29fd4e942076bcd1160a662bf83c15d9ce8a8cc466763aec7e582b21b  actions-runner-osx-arm64-2.334.0.tar.gz" | shasum -a 256 -c
+4. Extract the installer
+   tar xzf ./actions-runner-osx-arm64-2.334.0.tar.gz
+5. Create the runner and start the configuration experience
+   ./config.sh --url https://github.com/GitHub4Test/digital-twin --token ALRG6R2SC53PXIK226TCUGDKCMOKC
+6. Last step, run it!
+   ./run.sh
+7. Recommended : Run as a service   
+    sudo ./svc.sh install
+    sudo ./svc.sh start 
+8. Check status -> sudo ./svc.sh status    
+9. Use this YAML setting in your workflow file for each job
+   runs-on: self-hosted   
 
 ## Development notes
 

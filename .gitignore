@@ -16,3 +16,4 @@ diagrams/
 *.pdf
 *.asciidoctor
 images/
+*.env.local*

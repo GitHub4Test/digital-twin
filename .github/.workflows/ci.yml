@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    name: Test ${{ matrix.service_name }}
+    runs-on: self-hosted
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service_name: api-service
+            service_path: apps/backend/api-service
+
+          - service_name: edge-server
+            service_path: apps/backend/edge-server
+
+          - service_name: digital-twin-app
+            service_path: apps/frontend/digital-twin-app
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.service_path }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip pipx
+          pipx install poetry
+          pipx ensurepath
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.in-project true
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-interaction --no-root
+
+      - name: Install project package
+        run: |
+          poetry install --no-interaction
+
+      - name: Run tests
+        run: |
+          poetry run pytest tests -v

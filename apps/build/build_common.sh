@@ -18,13 +18,3 @@ docker buildx create \
 
 docker buildx inspect --bootstrap
 ####### ONLY ONCE
-
-# api_service
-./build/build_package.sh api-service
-./build/publish_package.sh api-service
-./build/build_docker.sh api-service 1.0.0
-
-# edge_server
-./build/build_package.sh edge-server
-./build/publish_package.sh edge-server
-./build/build_docker.sh edge-server 0.1.0
