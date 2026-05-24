@@ -1,11 +1,16 @@
 name: CI
 
 on:
-  pull_request:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main]
+    paths:
+      - "apps/**"
+      - ".github/workflows/ci.yml"
+
+  pull_request:
+    paths:
+      - "apps/**"
+      - ".github/workflows/ci.yml"
 
 jobs:
   test:
