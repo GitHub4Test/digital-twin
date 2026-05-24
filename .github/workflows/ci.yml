@@ -53,6 +53,16 @@ jobs:
           poetry env use python3
           poetry config virtualenvs.in-project true
 
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+          key: poetry-${{ runner.os }}-${{ hashFiles(format('{0}/poetry.lock', matrix.service_path)) }}
+          restore-keys: |
+            poetry-${{ runner.os }}-
+
       - name: Install dependencies
         run: |
           poetry lock

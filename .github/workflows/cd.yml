@@ -47,6 +47,14 @@ jobs:
           poetry env use python3
           poetry config virtualenvs.in-project true
 
+      - name: Restore Docker build cache
+        uses: actions/cache@v4
+        with:
+          path: .buildx-cache
+          key: buildx-${{ runner.os }}-${{ matrix.service_name }}-${{ github.sha }}
+          restore-keys: |
+            buildx-${{ runner.os }}-${{ matrix.service_name }}-
+
       - name: Build and push package/image
         working-directory: ${{ matrix.service_path }}
         env:
@@ -55,6 +63,11 @@ jobs:
         run: |
           chmod +x build/build_and_push_nexus.sh
           ./build/build_and_push_nexus.sh
+
+      - name: Cleanup Docker cache
+        if: always()
+        run: |
+          docker system prune -af || true
 
   ########################################################
   # Deploy to k3s using Ansible
