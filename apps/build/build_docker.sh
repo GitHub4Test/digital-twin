@@ -24,6 +24,10 @@ VERSION="$(poetry version -s)"
 PACKAGE_NAME="$(basename "$SERVICE_PATH" | tr '-' '_')"
 IMAGE="$NEXUS_DOCKER_REPO/$(basename "$SERVICE_PATH"):$VERSION"
 
+echo "$NEXUS_PASSWORD" | docker login "$NEXUS_DOCKER_REPO" \
+  -u "$NEXUS_USERNAME" \
+  --password-stdin
+
 docker buildx build \
   --builder multiarch-builder \
   --platform "$PLATFORM" \
