@@ -14,12 +14,20 @@ fastapi = "^0.104.1"
 uvicorn = {extras = ["standard"], version = "^0.24.0"}
 pydantic = "^2.5.0"
 aio-pika = "^9.6.2"
+tenacity = "^9.1.4"
+pybreaker = "^1.4.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
 black = "^23.10.0"
 flake8 = "^6.1.0"
+httpx = "^0.28.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-v"

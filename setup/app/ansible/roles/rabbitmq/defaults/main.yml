@@ -9,10 +9,10 @@ rabbitmq_erlang_cookie: "ChangeMeStrongCookie"
 rabbitmq_storage_size: 5Gi
 
 rabbitmq_root_url: "https://rabbitmq.local:30088"
-rabbitmq_sso_enabled: true
+rabbitmq_sso_enabled: false
 rabbitmq_task_files: >-
   {{
-    ['install_nexus.yml'] +
+    ['install_rabbitmq.yml'] +
     (['keycloak.yml'] if (rabbitmq_sso_enabled | bool) else [])
   }}
 

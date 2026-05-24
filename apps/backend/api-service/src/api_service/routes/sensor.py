@@ -3,7 +3,7 @@ API routes for sensor data management
 """
 
 from uuid import uuid4
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Header
 from api_service.models import (
     SensorReadingCreate,
     SensorReadingResponse,
@@ -15,6 +15,7 @@ from api_service.models import (
 from api_service.rabbitmq.events import SensorReadingEvent
 from api_service.rabbitmq.publisher import publish_sensor_event
 from api_service.routes.common import db
+from api_service.resilience import publish_with_resilience
 
 router = APIRouter(prefix="/api/v1", tags=["sensor-data"])
 
@@ -39,7 +40,7 @@ async def create_sensor_reading(reading: SensorReadingCreate):
         )
         return MessageResponse(message="Sensor reading stored successfully")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=503, detail=f"Database unavailable: {str(e)}")
 
 @router.post(
     "/readings/event",
@@ -48,25 +49,31 @@ async def create_sensor_reading(reading: SensorReadingCreate):
     summary="Accept sensor reading",
     description="Accept a sensor reading and enqueue it for asynchronous processing."
 )
-async def create_sensor_reading_event(reading: SensorReadingCreate):
+async def create_sensor_reading_event(
+    reading: SensorReadingCreate,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")
+):
     print("Inside create_sensor_reading_event")
     
     try:
         event = SensorReadingEvent(
-            event_id=uuid4(),
+            event_id=idempotency_key or str(uuid4()),
             timestamp=reading.timestamp,
             temperature=reading.temperature,
             humidity=reading.humidity,
         )
 
-        await publish_sensor_event(event.model_dump(mode="json"))
+        await publish_with_resilience(
+            publish_sensor_event,
+            event.model_dump(mode="json")
+        )
 
         return MessageResponse(
             message="Sensor reading accepted for processing"
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=503, detail=f"RabbitMQ unavailable: {str(e)}")
         
 @router.get(
     "/readings",
@@ -90,7 +97,7 @@ async def get_sensor_data(
         readings = db.get_readings(limit)
         return readings
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=503, detail=f"Database unavailable: {str(e)}")
 
 @router.delete(
     "/readings",

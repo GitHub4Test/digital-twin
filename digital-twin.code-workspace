@@ -1,0 +1,28 @@
+// digital-twin.code-workspace
+{
+  "folders": [
+    {
+      "name": "api-service",
+      "path": "apps/backend/api-service"
+    },
+    {
+      "name": "edge-server",
+      "path": "apps/backend/edge-server"
+    },
+    {
+      "name": "digital-twin-frontend",
+      "path": "apps/frontend/digital-twin-app"
+    }
+  ],
+  "settings": {
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+      "tests"
+    ],
+    "python.analysis.extraPaths": [
+      "${workspaceFolder}/src"
+    ],
+    "python.envFile": "${workspaceFolder}/.env"
+  }
+}

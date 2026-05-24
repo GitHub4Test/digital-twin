@@ -5,7 +5,9 @@ import requests
 import pandas as pd
 import os
 import sys
+import pybreaker
 from digital_twin_app.twin_model import predict_next
+from digital_twin_app.resilience import fetch_backend_data, BackendReadError
 
 
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -23,10 +25,9 @@ logger.info("Logger initialized")
 
 st.title("🌍 Raspberry Pi 4 Digital Twin")
 
-# Function to fetch data from the backend API with error handling and logging
 def get_data(timeout_s: int = 5):
     """
-    Fetches data from the backend API with error handling and logging.
+    Fetches data from the backend API with error handling, retries, and circuit breaker.
     @param timeout_s: Timeout in seconds for the API request (default: 5)
     @return: List of data received from the backend, or an empty list if an error occurs
     """
@@ -36,17 +37,24 @@ def get_data(timeout_s: int = 5):
     
     try:
         logger.info(f"Requesting data from backend: {BACKEND_API_URL}")
-        response = requests.get(BACKEND_API_URL, timeout=timeout_s)
-        response.raise_for_status()
-        data = response.json()
+        data = fetch_backend_data(BACKEND_API_URL, timeout_s)
         logger.info(f"Received data: {data}")
+        return data
+    except pybreaker.CircuitBreakerError:
+        logger.error("Circuit breaker is open. Backend temporarily unavailable.")
+        st.warning("Backend temporarily unavailable. Please try again shortly.")
+        st.info(f"Connecting to: {BACKEND_API_URL}")
+        return []
+    except BackendReadError as e:
+        logger.error(f"Backend read failed after retries: {str(e)}")
+        st.error(f"Backend read failed after retries: {str(e)}")
+        st.info(f"Connecting to: {BACKEND_API_URL}")
+        return []
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to connect to backend: {str(e)}")
         st.error(f"Failed to connect to backend: {str(e)}")
         st.info(f"Connecting to: {BACKEND_API_URL}")
-        data = []
-    
-    return data
+        return []
 
 # Function to display current and predicted temperature
 def display_current_and_predicted_temparature(current_received_data):
@@ -55,6 +63,10 @@ def display_current_and_predicted_temparature(current_received_data):
     @param current_received_data: List of data received from the backend, expected to contain timestamp, temperature, and humidity
     @return: Predicted next temperature
     """
+    if not current_received_data:
+        st.warning("No sensor data available.")
+        return None
+
     df = pd.DataFrame(current_received_data, columns=["timestamp", "temperature", "humidity"])
     
     if not df.empty:

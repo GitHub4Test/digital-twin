@@ -29,7 +29,7 @@
     path: "{{ deploy_helm_charts_folder }}"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
-    recurse: yes
+    recurse: true
 
 - name: Set ECR Secret to false for non-EC2
   set_fact:
@@ -51,13 +51,13 @@
           endpoint:
             - "http://{{ deploy_helm_nexus_repo }}"
     mode: '0644'
-    
+
 - name: Ensure k3s is running
   become: true
   ansible.builtin.systemd:
     name: k3s
     state: restarted
-    enabled: true  
+    enabled: true
 
 - name: Deploy digital twin application services
   ansible.builtin.command:

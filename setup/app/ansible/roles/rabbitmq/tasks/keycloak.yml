@@ -9,9 +9,12 @@
       client_id: rabbitmq
       name: RabbitMQ
       public: true
+      standard_flow_enabled: true
+      direct_access_grants_enabled: false
       root_url: "{{ rabbitmq_root_url }}"
       redirect_uris:
         - "{{ rabbitmq_root_url }}/js/oidc-oauth/login-callback.html"
+        - "{{ rabbitmq_root_url }}/*"
       web_origins:
         - "{{ rabbitmq_root_url }}"
 
