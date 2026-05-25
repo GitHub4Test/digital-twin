@@ -2,6 +2,7 @@
 API routes for sensor data management
 """
 
+import logging
 from uuid import uuid4
 from fastapi import APIRouter, HTTPException, status, Query, Header
 from api_service.models import (
@@ -13,9 +14,10 @@ from api_service.models import (
 )
 
 from api_service.rabbitmq.events import SensorReadingEvent
-from api_service.rabbitmq.publisher import publish_sensor_event
 from api_service.routes.common import db
-from api_service.resilience import publish_with_resilience
+from api_service.db.exceptions import DuplicateEventError
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["sensor-data"])
 
@@ -33,13 +35,17 @@ router = APIRouter(prefix="/api/v1", tags=["sensor-data"])
 )
 async def create_sensor_reading(reading: SensorReadingCreate):
     try:
+        logger.info(f"Creating sensor reading: temperature={reading.temperature}C, humidity={reading.humidity}%")
         db.insert_reading(
+            reading.event_id,
             reading.timestamp,
             reading.temperature,
             reading.humidity
         )
-        return MessageResponse(message="Sensor reading stored successfully")
+        logger.info(f"Sensor reading stored successfully: event_id={reading.event_id}")
+        return MessageResponse(message="Sensor reading stored successfully", event_id=reading.event_id, status="RECEIVED")
     except Exception as e:
+        logger.error(f"Failed to store sensor reading: {str(e)}")
         raise HTTPException(status_code=503, detail=f"Database unavailable: {str(e)}")
 
 @router.post(
@@ -53,27 +59,43 @@ async def create_sensor_reading_event(
     reading: SensorReadingCreate,
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")
 ):
-    print("Inside create_sensor_reading_event")
-    
+    event_id = idempotency_key or str(uuid4())
+    logger.info(f"Processing sensor reading event: event_id={event_id}")
+
+    payload = SensorReadingEvent(
+        event_id=event_id,
+        timestamp=reading.timestamp,
+        temperature=reading.temperature,
+        humidity=reading.humidity,
+    )
+
+    event_payload = payload.model_dump(mode="json")
+
     try:
-        event = SensorReadingEvent(
-            event_id=idempotency_key or str(uuid4()),
-            timestamp=reading.timestamp,
-            temperature=reading.temperature,
-            humidity=reading.humidity,
+        logger.info(f"Creating reading and outbox event: event_id={event_id}, temp={reading.temperature}C")
+        db.create_reading_and_outbox_event(
+            event_id=event_id,
+            timestamp=event_payload["timestamp"],
+            temperature=event_payload["temperature"],
+            humidity=event_payload["humidity"],
+            outbox_payload=event_payload,
         )
-
-        await publish_with_resilience(
-            publish_sensor_event,
-            event.model_dump(mode="json")
-        )
-
+        logger.info(f"Sensor reading accepted for processing: event_id={event_id}")
         return MessageResponse(
-            message="Sensor reading accepted for processing"
+            message="Sensor reading accepted for processing",
+            event_id=event_id,
+            status="RECEIVED",
         )
-
+    except DuplicateEventError:
+        logger.warning(f"Duplicate sensor reading received: event_id={event_id}")
+        return MessageResponse(
+            message="Sensor reading already accepted",
+            event_id=event_id,
+            status="RECEIVED",
+        )
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"RabbitMQ unavailable: {str(e)}")
+        logger.error(f"Failed to create sensor reading event: event_id={event_id}, error={str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
         
 @router.get(
     "/readings",
@@ -94,9 +116,12 @@ async def get_sensor_data(
     )
 ):
     try:
+        logger.info(f"Retrieving sensor readings: limit={limit}")
         readings = db.get_readings(limit)
+        logger.info(f"Retrieved {len(readings)} sensor readings")
         return readings
     except Exception as e:
+        logger.error(f"Failed to retrieve sensor readings: {str(e)}")
         raise HTTPException(status_code=503, detail=f"Database unavailable: {str(e)}")
 
 @router.delete(

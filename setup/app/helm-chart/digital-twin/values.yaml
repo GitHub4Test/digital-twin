@@ -3,18 +3,18 @@ frontend:
   containers:
     app:
       image: ""
-      tag: latest
+      tag: 1.0.2
   service:
     type: TCP
     port: 8501
     nodeport: 30070
   resources:
     requests:
-      memory: "512Mi"
-      cpu: "250m"
+      memory: "256Mi"
+      cpu: "125m"
     limits:
-      memory: "1024Mi"
-      cpu: "500m"
+      memory: "528Mi"
+      cpu: "250m"
   ingress:
     enabled: true
     host: dt-frontend.local
@@ -28,19 +28,19 @@ backend:
   containers:
     api_service:
       image: ""
-      tag: latest
+      tag: 1.0.2
     edge_server:
       image: ""
-      tag: latest
+      tag: 0.2.0
   service:
     type: TCP
     port: 8000
   resources:
     requests:
-      memory: "256Mi"
+      memory: "128Mi"
       cpu: "125m"
     limits:
-      memory: "512Mi"
+      memory: "256Mi"
       cpu: "250m"
   readinessProbe:
     httpGet:

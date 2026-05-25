@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "api-service"
-version = "1.0.0"
+version = "1.0.2"
 description = "Api management backend service for Digital Twin sensor data management"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"

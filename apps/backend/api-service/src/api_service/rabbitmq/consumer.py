@@ -31,10 +31,13 @@ class DatabaseWriteError(Exception):
 async def insert_reading_with_retry(payload: dict):
     try:
         db.insert_reading(
+            payload["event_id"],
             payload["timestamp"],
             payload["temperature"],
             payload["humidity"],
         )
+    except DuplicateEventError:
+        logger.info("Duplicate event ignored: %s", payload["event_id"])        
     except Exception as e:
         raise DatabaseWriteError(str(e)) from e
 
@@ -42,29 +45,28 @@ async def handle_sensor_event(message):
     async with message.process(requeue=False):
         payload = json.loads(message.body.decode())
 
-        logger.info("Received sensor event: %s", payload)
+        db.mark_reading_processed(payload["event_id"])
 
-        await insert_reading_with_retry(payload)
+        logger.info("Processed sensor event: %s", payload["event_id"])
 
 async def start_sensor_consumer():
-    await rabbitmq.channel.declare_exchange(
+    logger.info("Starting sensor event consumer")
+    logger.info(f"Consumer queue: {RABBITMQ_QUEUE_SENSOR}")
+    
+    dlx = await rabbitmq.channel.declare_exchange(
         RABBITMQ_DLX,
         type="direct",
         durable=True,
     )
+    logger.info(f"Dead-letter exchange declared: {RABBITMQ_DLX}")
 
-    await rabbitmq.channel.declare_queue( 
+    dlq = await rabbitmq.channel.declare_queue(
         RABBITMQ_QUEUE_SENSOR_DLQ,
         durable=True,
-        arguments={
-            "x-message-ttl": 60000,  # 1 minute TTL for messages in DLQ
-            "x-dead-letter-exchange": RABBITMQ_DLX,
-            "x-dead-letter-routing-key": RABBITMQ_QUEUE_SENSOR,
-        }
     )
 
     await dlq.bind(
-        RABBITMQ_DLX,
+        dlx,
         routing_key=RABBITMQ_QUEUE_SENSOR_DLQ,
     )
    
@@ -75,22 +77,30 @@ async def start_sensor_consumer():
             "x-dead-letter-exchange": RABBITMQ_DLX,
             "x-dead-letter-routing-key": RABBITMQ_QUEUE_SENSOR_DLQ,
         },  
-        )
+    )
+    logger.info(f"Sensor queue declared: {RABBITMQ_QUEUE_SENSOR}")
 
     await queue.consume(handle_sensor_event)
+    logger.info("Sensor event consumer started and listening")
 
 async def main():
+    logger.info("Initializing RabbitMQ consumer application")
     db.init()
+    logger.info("Database initialized")
 
     await rabbitmq.connect()
+    logger.info("Connected to RabbitMQ")
+    
     await start_sensor_consumer()
 
-    print("[*] Waiting for messages. To exit press CTRL+C")
+    logger.info("Waiting for messages. To exit press CTRL+C")
 
     try:
         await asyncio.Future()
     finally:
+        logger.info("Shutting down RabbitMQ consumer")
         await rabbitmq.close()
+        logger.info("Consumer shutdown complete")
 
 if __name__ == "__main__":
     asyncio.run(main())

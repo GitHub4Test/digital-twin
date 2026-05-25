@@ -30,14 +30,13 @@ echo "$NEXUS_PASSWORD" | docker login "$NEXUS_DOCKER_REPO" \
 
 docker buildx build \
   --builder multiarch-builder \
+  --no-cache \
   --platform "$PLATFORM" \
   --build-arg PACKAGE_NAME="$PACKAGE_NAME" \
   --build-arg VERSION="$VERSION" \
   --build-arg NEXUS_PYPI_SIMPLE_URL=$NEXUS_PYPI_SIMPLE_URL \
   --build-arg NEXUS_USERNAME=$NEXUS_USERNAME \
   --build-arg NEXUS_PASSWORD=$NEXUS_PASSWORD \
-  --cache-from=type=local,src=.buildx-cache \
-  --cache-to=type=local,dest=.buildx-cache,mode=max \
   -t "$IMAGE" \
   -t "$NEXUS_DOCKER_REPO/$(basename "$SERVICE_PATH"):latest" \
   --push \
