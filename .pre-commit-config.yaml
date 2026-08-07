@@ -1,0 +1,44 @@
+repos:
+  - repo: local
+    hooks:
+      - id: semgrep-api-service
+        name: semgrep security scan (api-service)
+        entry: bash scripts/security/run-semgrep.sh apps/backend/api-service
+        language: system
+        pass_filenames: false
+        files: ^apps/backend/api-service/
+
+      - id: pip-audit-api-service
+        name: pip audit (api-service)
+        entry: bash scripts/security/run-pip-audit.sh apps/backend/api-service
+        language: system
+        pass_filenames: false
+        files: ^apps/backend/api-service/
+
+      - id: semgrep-edge-server
+        name: semgrep security scan (edge-server)
+        entry: bash scripts/security/run-semgrep.sh apps/backend/edge-server
+        language: system
+        pass_filenames: false
+        files: ^apps/backend/edge-server/
+
+      - id: pip-audit-edge-server
+        name: pip audit (edge-server)
+        entry: bash scripts/security/run-pip-audit.sh apps/backend/edge-server
+        language: system
+        pass_filenames: false
+        files: ^apps/backend/edge-server/
+
+      - id: semgrep-digital-twin-app
+        name: semgrep security scan (digital-twin-app)
+        entry: bash scripts/security/run-semgrep.sh apps/frontend/digital-twin-app
+        language: system
+        pass_filenames: false
+        files: ^apps/frontend/digital-twin-app/
+
+      - id: pip-audit-digital-twin-app
+        name: pip audit (digital-twin-app)
+        entry: bash scripts/security/run-pip-audit.sh apps/frontend/digital-twin-app
+        language: system
+        pass_filenames: false
+        files: ^apps/frontend/digital-twin-app/

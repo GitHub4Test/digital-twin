@@ -5,5 +5,10 @@ SERVICE_PATH="${1:?Usage: $0 <service-path>}"
 
 cd "$SERVICE_PATH"
 
-poetry export -f requirements.txt --without-hashes -o /tmp/requirements-audit.txt
-poetry run pip-audit -r /tmp/requirements-audit.txt
+if [[ ! -d ".venv" ]]; then
+  echo "Creating virtual environment for $(pwd)"
+  poetry install --with dev --with security --no-interaction
+fi
+
+VENV_PATH="$(poetry env info --path)"
+poetry run pip-audit --path "$VENV_PATH"
