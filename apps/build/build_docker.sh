@@ -44,3 +44,5 @@ docker buildx build \
 
 echo "Docker image pushed:"
 echo "$IMAGE"
+
+../../scripts/security/run-trivy-image.sh "$IMAGE"

@@ -22,6 +22,12 @@ pytest = "^7.4.0"
 black = "^23.10.0"
 flake8 = "^6.1.0"
 
+
+[tool.poetry.group.security.dependencies]
+semgrep = "^1.163.0"
+pip-audit = "^2.10.0"
+poetry-plugin-export = "^1.10.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -31,3 +37,5 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "-v"
+
+

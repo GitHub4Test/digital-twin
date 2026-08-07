@@ -115,6 +115,27 @@ Pre-requisite - create 'venv' environments under each microservice folder with i
 9. Use this YAML setting in your workflow file for each job
    runs-on: self-hosted   
 
+## Security Scan Setup
+### trivy
+  1. brew install trivy
+  2. Run script with contents as
+      IMAGE=nexus.local:5002/api-service:1.0.0
+      trivy image \
+      --severity HIGH,CRITICAL \
+      --exit-code 1 \
+      "$IMAGE"
+### SAST (semgroup)
+  1. poetry add --group security semgroup
+  2. SERVICE_PATH=api_service
+     cd "$SERVICE_PATH"
+     poetry run semgrep --config auto .
+### Depedency Scan (pip-audit)
+  1. poetry add --group security semgroup
+  2. SERVICE_PATH=api_service
+     cd "$SERVICE_PATH"
+     poetry export -f requirements.txt --without-hashes -o /tmp/requirements-audit.txt
+     poetry run pip-audit -r /tmp/requirements-audit.txt
+
 ## Development notes
 
 - Python projects use `pyproject.toml` in each service. Install dependencies per-service in a virtualenv.

@@ -77,6 +77,14 @@ jobs:
         run: |
           poetry install --no-interaction
 
+      - name: Run Semgrep
+        run: |
+          ../../../scripts/security/run-semgrep.sh ${{ matrix.service_path }}
+
+      - name: Run Dependency Scan
+        run: |
+          ../../../scripts/security/run-pip-audit.sh ${{ matrix.service_path }}
+
       - name: Run tests
         run: |
           poetry run pytest tests -v

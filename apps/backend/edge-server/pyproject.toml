@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "edge-server"
-version = "0.2.0"
+version = "0.2.1"
 description = ""
 authors = ["Suhas Pachling <suhas@test.com>"]
 readme = "README.md"
@@ -9,13 +9,19 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.10,<4.0"
 requests = "^2.32.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
 black = "^23.10.0"
 flake8 = "^6.1.0"
+
+
+[tool.poetry.group.security.dependencies]
+semgrep = "^1.163.0"
+pip-audit = "^2.10.0"
+poetry-plugin-export = "^1.10.0"
 
 [build-system]
 requires = ["poetry-core"]
