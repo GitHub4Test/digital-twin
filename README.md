@@ -132,7 +132,7 @@ Pre-requisite - create 'venv' environments under each microservice folder with i
      cd "$SERVICE_PATH"
      poetry run semgrep scan --config auto --error .
 ### Depedency Scan (pip-audit)
-  1. poetry add --group security semgrep
+  1. poetry add --group security pip-audit
   2. SERVICE_PATH=apps/backend/api-service
      cd "$SERVICE_PATH"
      poetry export -f requirements.txt --without-hashes -o /tmp/requirements-audit.txt
