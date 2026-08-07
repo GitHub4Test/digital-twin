@@ -35,14 +35,22 @@ docker buildx build \
   --build-arg PACKAGE_NAME="$PACKAGE_NAME" \
   --build-arg VERSION="$VERSION" \
   --build-arg NEXUS_PYPI_SIMPLE_URL=$NEXUS_PYPI_SIMPLE_URL \
-  --build-arg NEXUS_USERNAME=$NEXUS_USERNAME \
-  --build-arg NEXUS_PASSWORD=$NEXUS_PASSWORD \
+  --secret id=nexus_ca_cert,env=NEXUS_CA_CERT \
+  --secret id=nexus_username,env=NEXUS_USERNAME \
+  --secret id=nexus_password,env=NEXUS_PASSWORD \
   -t "$IMAGE" \
   -t "$NEXUS_DOCKER_REPO/$(basename "$SERVICE_PATH"):latest" \
-  --push \
+  --load \
   .
 
-echo "Docker image pushed:"
+echo "Scanning Docker image for vulnerabilities..."
+if ! ../../scripts/security/run-trivy-image.sh "$IMAGE"; then
+  echo "Docker image scan failed; aborting push." >&2
+  exit 1
+fi
+
+echo "Docker image scan passed; pushing:"
 echo "$IMAGE"
 
-../../scripts/security/run-trivy-image.sh "$IMAGE"
+docker push "$IMAGE"
+docker push "$NEXUS_DOCKER_REPO/$(basename "$SERVICE_PATH"):latest"

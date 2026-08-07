@@ -8,11 +8,15 @@ import os
 import unittest
 import tempfile
 import sqlite3
+import json
+import uuid
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../src'))
 from api_service.db.database import Database
+from api_service.db.exceptions import DuplicateEventError
 from api_service.models import SensorReadingResponse
 
 
@@ -368,6 +372,146 @@ class TestHealthCheck(unittest.TestCase):
         
         result = self.db.health_check()
         self.assertTrue(result)
+
+
+class TestOutboxBehavior(unittest.TestCase):
+    """Tests for atomic outbox event handling and duplicate-event safeguards"""
+
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.db_path = os.path.join(self.temp_dir.name, "test.db")
+        self.db = Database(db_path=self.db_path)
+        self.db.init()
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+
+    def test_create_reading_and_outbox_event_inserts_atomically(self):
+        event_id = "event-outbox-1"
+        payload = {"event_id": event_id, "temperature": 21.5}
+
+        self.db.create_reading_and_outbox_event(
+            event_id=event_id,
+            timestamp="2026-01-01T10:00:00",
+            temperature=21.5,
+            humidity=50.0,
+            outbox_payload=payload,
+        )
+
+        conn = sqlite3.connect(self.db_path)
+        sensor_count = conn.execute("SELECT COUNT(*) FROM sensor").fetchone()[0]
+        outbox_count = conn.execute("SELECT COUNT(*) FROM outbox_events").fetchone()[0]
+        conn.close()
+
+        self.assertEqual(sensor_count, 1)
+        self.assertEqual(outbox_count, 1)
+
+    def test_create_reading_and_outbox_event_rolls_back_on_outbox_failure(self):
+        fixed_id = uuid.UUID("12345678-1234-5678-1234-567812345678")
+        with patch("api_service.db.database.uuid4", return_value=fixed_id):
+            self.db.create_reading_and_outbox_event(
+                event_id="event-outbox-2",
+                timestamp="2026-01-01T10:00:00",
+                temperature=22.5,
+                humidity=52.0,
+                outbox_payload={"event_id": "event-outbox-2"},
+            )
+
+            with self.assertRaises(DuplicateEventError):
+                self.db.create_reading_and_outbox_event(
+                    event_id="event-outbox-3",
+                    timestamp="2026-01-01T11:00:00",
+                    temperature=23.5,
+                    humidity=53.0,
+                    outbox_payload={"event_id": "event-outbox-3"},
+                )
+
+        conn = sqlite3.connect(self.db_path)
+        sensor_count = conn.execute("SELECT COUNT(*) FROM sensor").fetchone()[0]
+        outbox_count = conn.execute("SELECT COUNT(*) FROM outbox_events").fetchone()[0]
+        conn.close()
+
+        self.assertEqual(sensor_count, 1)
+        self.assertEqual(outbox_count, 1)
+
+    def test_create_reading_and_outbox_event_raises_duplicate_event_error(self):
+        self.db.create_reading_and_outbox_event(
+            event_id="event-duplicate",
+            timestamp="2026-01-01T10:00:00",
+            temperature=20.0,
+            humidity=50.0,
+            outbox_payload={"event_id": "event-duplicate"},
+        )
+
+        with self.assertRaises(DuplicateEventError):
+            self.db.create_reading_and_outbox_event(
+                event_id="event-duplicate",
+                timestamp="2026-01-01T10:30:00",
+                temperature=21.0,
+                humidity=51.0,
+                outbox_payload={"event_id": "event-duplicate"},
+            )
+
+    def test_get_pending_outbox_events_returns_mapped_payloads(self):
+        self.db.create_reading_and_outbox_event(
+            event_id="event-pending",
+            timestamp="2026-01-01T10:00:00",
+            temperature=20.0,
+            humidity=50.0,
+            outbox_payload={"event_id": "event-pending", "temperature": 20.0},
+        )
+
+        events = self.db.get_pending_outbox_events(limit=5)
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["aggregate_id"], "event-pending")
+        self.assertEqual(json.loads(events[0]["payload"])["event_id"], "event-pending")
+
+    def test_mark_outbox_event_published_updates_status(self):
+        self.db.create_reading_and_outbox_event(
+            event_id="event-publish",
+            timestamp="2026-01-01T10:00:00",
+            temperature=20.0,
+            humidity=50.0,
+            outbox_payload={"event_id": "event-publish"},
+        )
+
+        events = self.db.get_pending_outbox_events(limit=5)
+        self.db.mark_outbox_event_published(events[0]["id"])
+
+        updated = self.db.get_pending_outbox_events(limit=5)
+        self.assertEqual(updated, [])
+
+        conn = sqlite3.connect(self.db_path)
+        row = conn.execute(
+            "SELECT status, published_at FROM outbox_events WHERE id = ?",
+            (events[0]["id"],),
+        ).fetchone()
+        conn.close()
+
+        self.assertEqual(row[0], "PUBLISHED")
+        self.assertIsNotNone(row[1])
+
+    def test_increment_outbox_retry_updates_retry_count(self):
+        self.db.create_reading_and_outbox_event(
+            event_id="event-retry",
+            timestamp="2026-01-01T10:00:00",
+            temperature=20.0,
+            humidity=50.0,
+            outbox_payload={"event_id": "event-retry"},
+        )
+
+        events = self.db.get_pending_outbox_events(limit=5)
+        self.db.increment_outbox_retry(events[0]["id"])
+
+        conn = sqlite3.connect(self.db_path)
+        retry_count = conn.execute(
+            "SELECT retry_count FROM outbox_events WHERE id = ?",
+            (events[0]["id"],),
+        ).fetchone()[0]
+        conn.close()
+
+        self.assertEqual(retry_count, 1)
 
 
 class TestDatabaseIntegration(unittest.TestCase):

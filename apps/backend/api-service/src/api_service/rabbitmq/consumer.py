@@ -10,6 +10,7 @@ import logging
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from api_service.db.database import db
+from api_service.db.exceptions import DuplicateEventError
 from api_service.rabbitmq.rabbitmq import rabbitmq
 
 logger = logging.getLogger(__name__)

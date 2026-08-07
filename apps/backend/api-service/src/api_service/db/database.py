@@ -32,7 +32,9 @@ class Database:
         """
         try:
             logger.debug(f"Creating database connection to {self.db_path}")
-            return sqlite3.connect(self.db_path)
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            return conn
         except Exception as e:
             logger.error(f"Database connection error: {str(e)}")
             raise Exception(f"Database connection error: {str(e)}")
@@ -89,8 +91,14 @@ class Database:
             cursor = conn.cursor()
             cursor.execute(query, params)
             conn.commit()
+        except sqlite3.IntegrityError as e:
+            if conn is not None:
+                conn.rollback()
+            if "UNIQUE" in str(e) or "event_id" in str(e).lower():
+                raise DuplicateEventError(str(e)) from e
+            raise Exception(f"Database update error: {str(e)}")
         except Exception as e:
-            if conn:
+            if conn is not None:
                 conn.rollback()
             raise Exception(f"Database update error: {str(e)}")
         finally:
@@ -221,6 +229,7 @@ class Database:
             DuplicateEventError: If event_id already exists in sensor table
             Exception: For any other database errors
         """
+        conn = None
         try:
             conn = self._get_connection()
             conn.execute("BEGIN")
@@ -268,13 +277,15 @@ class Database:
             conn.commit()
 
         except sqlite3.IntegrityError as e:
-            conn.rollback()
+            if conn is not None:
+                conn.rollback()
 
             if "UNIQUE" in str(e):
-                raise DuplicateEventError(str(e))
+                raise DuplicateEventError(str(e)) from e
             raise
         except Exception:
-            conn.rollback()
+            if conn is not None:
+                conn.rollback()
             raise
         finally:
             self._close_connection(conn)
@@ -369,8 +380,23 @@ class Database:
             Dictionary with status and message
         """
         logger.info("Clearing all sensor readings from database")
-        query = "DELETE FROM sensor"
-        self._execute_update(query)
+        conn = None
+        try:
+            conn = self._get_connection()
+            conn.execute("BEGIN")
+            event_ids = [row[0] for row in conn.execute("SELECT event_id FROM sensor").fetchall()]
+            conn.execute("DELETE FROM sensor")
+            if event_ids:
+                placeholders = ", ".join("?" for _ in event_ids)
+                conn.execute(f"DELETE FROM outbox_events WHERE aggregate_id IN ({placeholders})", event_ids)
+            conn.commit()
+        except Exception as e:
+            if conn is not None:
+                conn.rollback()
+            raise Exception(f"Database clear error: {str(e)}")
+        finally:
+            self._close_connection(conn)
+
         logger.info("All sensor readings cleared from database")
         return {"status": "success", "message": "All sensor data cleared"}
 

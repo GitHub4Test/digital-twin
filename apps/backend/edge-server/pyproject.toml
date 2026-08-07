@@ -22,6 +22,8 @@ pre-commit = "^4.0.0"
 [tool.poetry.group.security.dependencies]
 semgrep = "^1.163.0"
 pip-audit = "^2.10.0"
+
+[tool.poetry.requires-plugins]
 poetry-plugin-export = "^1.10.0"
 
 [build-system]

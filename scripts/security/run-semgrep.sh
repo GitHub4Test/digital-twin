@@ -12,4 +12,4 @@ fi
 
 export TMPDIR="${TMPDIR:-/tmp}"
 mkdir -p "$TMPDIR"
-poetry run semgrep --config auto .
+poetry run semgrep scan --config auto --error .

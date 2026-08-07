@@ -17,7 +17,7 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
-    runs-on: self-hosted
+    runs-on: [self-hosted, debian, x64]
 
     strategy:
       fail-fast: false
@@ -46,18 +46,28 @@ jobs:
           python3 -m pip install poetry
 
       - name: Install Trivy
+        env:
+          TRIVY_VERSION: "0.64.1"
+          TRIVY_TAG: "v0.64.1"
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget
+          sudo apt-get install -y wget ca-certificates
 
-          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.64.1_Linux-64bit.deb
-          sudo dpkg -i trivy_0.64.1_Linux-64bit.deb
+          TRIVY_DEB="trivy_${TRIVY_VERSION}_Linux-64bit.deb"
+          TRIVY_URL="https://github.com/aquasecurity/trivy/releases/download/${TRIVY_TAG}/${TRIVY_DEB}"
+          TRIVY_SHA_URL="${TRIVY_URL}.sha256"
+
+          wget -q "$TRIVY_URL" -O "/tmp/${TRIVY_DEB}"
+          wget -q "$TRIVY_SHA_URL" -O "/tmp/${TRIVY_DEB}.sha256"
+          sha256sum -c "/tmp/${TRIVY_DEB}.sha256"
+          sudo dpkg -i "/tmp/${TRIVY_DEB}"
                     
-      - name: Build and push package/image to Nexus and run Trivy scan
+      - name: Build, run docker scan and push image to Nexus
         working-directory: ${{ matrix.service_path }}
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
-          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}        
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          NEXUS_CA_CERT: ""
         run: |
           chmod +x build/build_and_push_nexus.sh
           ./build/build_and_push_nexus.sh
@@ -71,7 +81,7 @@ jobs:
   # Deploy to k3s using Ansible
   ########################################################
   deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, debian, x64]
     needs: build-push
 
     steps:

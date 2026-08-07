@@ -123,19 +123,24 @@ Pre-requisite - create 'venv' environments under each microservice folder with i
       IMAGE=nexus.local:5002/api-service:1.0.0
       trivy image \
       --severity HIGH,CRITICAL \
+      --ignore-unfixed \
       --exit-code 1 \
       "$IMAGE"
-### SAST (semgroup)
-  1. poetry add --group security semgroup
-  2. SERVICE_PATH=api_service
+### SAST (semgrep)
+  1. poetry add --group security semgrep
+  2. SERVICE_PATH=apps/backend/api-service
      cd "$SERVICE_PATH"
-     poetry run semgrep --config auto .
+     poetry run semgrep scan --config auto --error .
 ### Depedency Scan (pip-audit)
-  1. poetry add --group security semgroup
-  2. SERVICE_PATH=api_service
+  1. poetry add --group security semgrep
+  2. SERVICE_PATH=apps/backend/api-service
      cd "$SERVICE_PATH"
      poetry export -f requirements.txt --without-hashes -o /tmp/requirements-audit.txt
      poetry run pip-audit -r /tmp/requirements-audit.txt
+
+  Example alternate service paths:
+  - SERVICE_PATH=apps/backend/edge-server
+  - SERVICE_PATH=apps/frontend/digital-twin-app
 
 ## Development notes
 
