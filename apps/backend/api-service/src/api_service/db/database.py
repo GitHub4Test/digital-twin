@@ -387,8 +387,14 @@ class Database:
             event_ids = [row[0] for row in conn.execute("SELECT event_id FROM sensor").fetchall()]
             conn.execute("DELETE FROM sensor")
             if event_ids:
-                placeholders = ", ".join("?" for _ in event_ids)
-                conn.execute(f"DELETE FROM outbox_events WHERE aggregate_id IN ({placeholders})", event_ids)
+                from sqlalchemy import text, bindparam
+
+                stmt = (
+                    text("DELETE FROM outbox_events WHERE aggregate_id IN :event_ids")
+                    .bindparams(bindparam("event_ids", expanding=True))
+                )
+
+                conn.execute(stmt, {"event_ids": event_ids})                
             conn.commit()
         except Exception as e:
             if conn is not None:
