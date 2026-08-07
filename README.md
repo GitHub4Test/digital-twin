@@ -96,6 +96,7 @@ Pre-requisite - create 'venv' environments under each microservice folder with i
 
 ## Github CI/CD setup
 ### Local github runner for MacOS ARM64 setup
+## Go to Github->Settings->Actions->Runners, click New Self-hosted Runner and select mac OS and follow the steps. Example below 
 1. Create a folder
    mkdir actions-runner && cd actions-runner
 2. Download the latest runner package
@@ -114,6 +115,32 @@ Pre-requisite - create 'venv' environments under each microservice folder with i
 8. Check status -> sudo ./svc.sh status    
 9. Use this YAML setting in your workflow file for each job
    runs-on: self-hosted   
+
+## Security Scan Setup
+### trivy
+  1. brew install trivy
+  2. Run script with contents as
+      IMAGE=nexus.local:5002/api-service:1.0.0
+      trivy image \
+      --severity HIGH,CRITICAL \
+      --ignore-unfixed \
+      --exit-code 1 \
+      "$IMAGE"
+### SAST (semgrep)
+  1. poetry add --group security semgrep
+  2. SERVICE_PATH=apps/backend/api-service
+     cd "$SERVICE_PATH"
+     poetry run semgrep scan --config auto --error .
+### Depedency Scan (pip-audit)
+  1. poetry add --group security pip-audit
+  2. SERVICE_PATH=apps/backend/api-service
+     cd "$SERVICE_PATH"
+     poetry export -f requirements.txt --without-hashes -o /tmp/requirements-audit.txt
+     poetry run pip-audit -r /tmp/requirements-audit.txt
+
+  Example alternate service paths:
+  - SERVICE_PATH=apps/backend/edge-server
+  - SERVICE_PATH=apps/frontend/digital-twin-app
 
 ## Development notes
 

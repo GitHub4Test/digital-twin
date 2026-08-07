@@ -2,6 +2,8 @@
 /*.DS_Store
 .terraform/
 /*.terraform/
+.venv
+/*.venv
 venv
 /*venv
 dist

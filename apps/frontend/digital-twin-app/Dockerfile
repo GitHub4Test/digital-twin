@@ -1,35 +1,48 @@
+# syntax=docker/dockerfile:1.7
 FROM python:3.11-slim
 
 WORKDIR /app
 
 ARG NEXUS_PYPI_SIMPLE_URL
-ARG NEXUS_USERNAME
-ARG NEXUS_PASSWORD
 ARG PACKAGE_NAME
 ARG VERSION
 
-RUN pip install --no-cache-dir \
-    --extra-index-url http://${NEXUS_USERNAME}:${NEXUS_PASSWORD}@${NEXUS_PYPI_SIMPLE_URL} \
-     --trusted-host 192.168.178.59 \
-    ${PACKAGE_NAME}==${VERSION}
+RUN --mount=type=secret,id=nexus_ca_cert \
+    --mount=type=secret,id=nexus_username \
+    --mount=type=secret,id=nexus_password \
+    cp /run/secrets/nexus_ca_cert /usr/local/share/ca-certificates/nexus-ca.crt \
+ && update-ca-certificates \
+ && export NEXUS_USERNAME="$(cat /run/secrets/nexus_username)" \
+ && export NEXUS_PASSWORD="$(cat /run/secrets/nexus_password)" \
+ && pip install --no-cache-dir \
+    --index-url "https://${NEXUS_USERNAME}:${NEXUS_PASSWORD}@${NEXUS_PYPI_SIMPLE_URL}" \
+    "${PACKAGE_NAME}==${VERSION}" \
+ && python -m pip uninstall -y setuptools wheel || true \
+ && rm -rf /usr/local/lib/python3.11/site-packages/setuptools* \
+ && rm -rf /usr/local/lib/python3.11/site-packages/wheel* \
+ && rm -rf /usr/local/lib/python3.11/site-packages/*jaraco*
+
+RUN addgroup --system digital-twin \
+    && adduser --system --ingroup digital-twin digital-twin
 
 # Create .streamlit config directory
-RUN mkdir -p ~/.streamlit
-
-# Streamlit configuration
-RUN echo "\
+RUN mkdir -p /home/digital-twin/.streamlit \
+    && echo "\
 [server]\n\
 headless = true\n\
 port = 8501\n\
 enableCORS = false\n\
-" > ~/.streamlit/config.toml
+" > /home/digital-twin/.streamlit/config.toml \
+    && chown -R digital-twin:digital-twin /home/digital-twin/.streamlit
 
 # Expose port
 EXPOSE 8501
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8501/_stcore/health || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')" || exit 1
+
+USER digital-twin
 
 # Run Streamlit app
 CMD ["sh", "-c", "streamlit run $(python -c 'import digital_twin_app.dashboard as m; print(m.__file__)') --server.address=0.0.0.0"]

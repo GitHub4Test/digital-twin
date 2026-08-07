@@ -34,16 +34,17 @@ router = APIRouter(prefix="/api/v1", tags=["sensor-data"])
     }
 )
 async def create_sensor_reading(reading: SensorReadingCreate):
+    event_id = str(uuid4())
     try:
         logger.info(f"Creating sensor reading: temperature={reading.temperature}C, humidity={reading.humidity}%")
         db.insert_reading(
-            reading.event_id,
+            event_id,
             reading.timestamp,
             reading.temperature,
             reading.humidity
         )
-        logger.info(f"Sensor reading stored successfully: event_id={reading.event_id}")
-        return MessageResponse(message="Sensor reading stored successfully", event_id=reading.event_id, status="RECEIVED")
+        logger.info(f"Sensor reading stored successfully: event_id={event_id}")
+        return MessageResponse(message="Sensor reading stored successfully", event_id=event_id, status="RECEIVED")
     except Exception as e:
         logger.error(f"Failed to store sensor reading: {str(e)}")
         raise HTTPException(status_code=503, detail=f"Database unavailable: {str(e)}")

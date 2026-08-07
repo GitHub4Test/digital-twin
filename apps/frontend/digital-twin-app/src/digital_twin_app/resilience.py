@@ -34,7 +34,7 @@ def fetch_backend_data(backend_api_url: str, timeout_s: int = 5):
     @raises BackendReadError: If a retryable error occurs (e.g., 429, 500, 502, 503, 504)
     @raises requests.exceptions.RequestException: For non-retryable errors or if all retries fail
     """
-    logger.info(f"Fetching data from backend: {backend_api_url}")
+    logger.info("Fetching data from configured backend endpoint")
     response = requests.get(backend_api_url, timeout=timeout_s)
 
     if response.status_code in [429, 500, 502, 503, 504]:
