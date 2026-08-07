@@ -26,7 +26,9 @@ flake8 = "^6.1.0"
 [tool.poetry.group.security.dependencies]
 semgrep = "^1.163.0"
 pip-audit = "^2.10.0"
-poetry-plugin-export = "^1.10.0"
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
 
 [build-system]
 requires = ["poetry-core"]

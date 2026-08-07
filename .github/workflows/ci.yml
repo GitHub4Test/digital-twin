@@ -77,7 +77,7 @@ jobs:
         run: |
           poetry install --no-interaction
 
-      - name: Run Semgrep
+      - name: Run SAST
         run: |
           ../../../scripts/security/run-semgrep.sh .
 
