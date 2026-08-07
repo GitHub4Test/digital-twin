@@ -3,7 +3,9 @@ import math
 import requests
 import os
 import random
-from datetime import datetime
+from datetime import datetime, timezone
+from uuid import uuid4
+
 from . import logger
 
 # Module-level defaults so functions and importing tests have predictable state
@@ -43,18 +45,25 @@ def extract_simulated_payload() -> dict:
     humidity += (50 - humidity) * 0.02 + (0.1 if cooling_on else -0.05) + phase_val + random.uniform(-0.05, 0.05)
     humidity = max(30, min(80, humidity))
     
+    event_id = str(uuid4())
+
     payload = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "temperature": round(temperature, 2),
         "humidity": round(humidity, 2)
     }
-    return payload
 
-def send_sensor_data(payload: dict, timeout_s: int):
+    headers = {
+        "Idempotency-Key": event_id,
+    }    
+    return payload, headers
+
+def send_sensor_data(payload: dict, headers: dict, timeout_s: int):
     try:
-        response = requests.post(SERVER_URL, json=payload, timeout=timeout_s)
-        if response.status_code == 200:
-            logger.info(f"Sensor reading sent: {payload}")
+        logger.info(f"Sending sensor reading: temp={payload.get('temperature')}C, humidity={payload.get('humidity')}%")
+        response = requests.post(SERVER_URL, json=payload, headers=headers, timeout=timeout_s)
+        if response.status_code in [200, 202]:
+            logger.info(f"Sensor reading sent successfully with status {response.status_code}")
         else:
             logger.error(f"Server error ({response.status_code}): {payload}")
     except requests.exceptions.RequestException as e:
@@ -63,13 +72,14 @@ def send_sensor_data(payload: dict, timeout_s: int):
 if __name__ == "__main__":
 
     logger.info(f"Connecting to backend API at: {SERVER_URL}")
+    logger.info("Edge server simulator starting - generating sensor data")
 
     # run in a loop to get continuously sensor values
     while True:
         # get simulated values from sensor
-        payload = extract_simulated_payload()
+        payload, headers = extract_simulated_payload()
 
         # send sensor data to backend service
-        send_sensor_data(payload, 5)
+        send_sensor_data(payload=payload, headers=headers, timeout_s=5)
 
         time.sleep(3)

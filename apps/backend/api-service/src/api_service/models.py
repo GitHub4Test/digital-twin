@@ -29,9 +29,11 @@ class SensorReadingCreate(BaseModel):
     )
 
 class SensorReadingResponse(BaseModel):
+    event_id: str | None = Field(default=None, examples=["example-event-id"])
     timestamp: datetime = Field(examples=["2026-04-23T18:30:00Z"])
     temperature: float = Field(examples=[24.5])
     humidity: float = Field(examples=[61.2])
+    status: str | None = Field(default=None, examples=["RECEIVED"])
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -44,6 +46,8 @@ class HealthCheckResponse(BaseModel):
 class MessageResponse(BaseModel):
     """Generic success response"""
     message: str = Field(..., examples=["Sensor reading stored successfully"])
+    event_id: str | None = Field(default=None, examples=["example-event-id"])
+    status: str | None = Field(default=None, examples=["RECEIVED"])
 
 class ErrorResponse(BaseModel):
     """Standard error response"""

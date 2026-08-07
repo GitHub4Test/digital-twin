@@ -195,10 +195,12 @@ class TestSensorReadingResponse(unittest.TestCase):
         response = SensorReadingResponse(
             timestamp=now,
             temperature=24.5,
-            humidity=61.2
+            humidity=61.2,
+            status="RECEIVED"
         )
         self.assertEqual(response.temperature, 24.5)
         self.assertEqual(response.humidity, 61.2)
+        self.assertEqual(response.status, "RECEIVED")
 
     def test_from_attributes_config(self):
         """Should allow creation from ORM objects"""
@@ -206,11 +208,13 @@ class TestSensorReadingResponse(unittest.TestCase):
             timestamp = datetime.now().isoformat()
             temperature = 25.0
             humidity = 60.0
+            status = "RECEIVED"
 
         sensor = FakeSensor()
         response = SensorReadingResponse.model_validate(sensor)
         self.assertEqual(response.temperature, 25.0)
         self.assertEqual(response.humidity, 60.0)
+        self.assertEqual(response.status, "RECEIVED")
 
     def test_response_has_all_fields(self):
         """Response should have timestamp, temperature, humidity"""
@@ -218,11 +222,13 @@ class TestSensorReadingResponse(unittest.TestCase):
         response = SensorReadingResponse(
             timestamp=now,
             temperature=25.0,
-            humidity=50.0
+            humidity=50.0,
+            status="RECEIVED"
         )
         self.assertTrue(hasattr(response, 'timestamp'))
         self.assertTrue(hasattr(response, 'temperature'))
         self.assertTrue(hasattr(response, 'humidity'))
+        self.assertTrue(hasattr(response, 'status'))
 
 
 class TestHealthCheckResponse(unittest.TestCase):
@@ -290,9 +296,13 @@ class TestMessageResponse(unittest.TestCase):
     def test_valid_message_response(self):
         """Should create valid message response"""
         response = MessageResponse(
-            message="Sensor reading stored successfully"
+            message="Sensor reading stored successfully",
+            event_id="event-123",
+            status="RECEIVED",
         )
         self.assertEqual(response.message, "Sensor reading stored successfully")
+        self.assertEqual(response.event_id, "event-123")
+        self.assertEqual(response.status, "RECEIVED")
 
     def test_missing_message(self):
         """Missing message should fail validation"""
@@ -301,19 +311,19 @@ class TestMessageResponse(unittest.TestCase):
 
     def test_empty_message(self):
         """Empty string message should be valid"""
-        response = MessageResponse(message="")
+        response = MessageResponse(message="", event_id="event-123", status="RECEIVED")
         self.assertEqual(response.message, "")
 
     def test_long_message(self):
         """Should accept long messages"""
         long_msg = "x" * 1000
-        response = MessageResponse(message=long_msg)
+        response = MessageResponse(message=long_msg, event_id="event-123", status="RECEIVED")
         self.assertEqual(response.message, long_msg)
 
     def test_special_characters_in_message(self):
         """Should accept special characters"""
         special_msg = "Error: Connection to 192.168.1.1:8000 failed! Status: ⚠"
-        response = MessageResponse(message=special_msg)
+        response = MessageResponse(message=special_msg, event_id="event-456", status="ERROR")
         self.assertEqual(response.message, special_msg)
 
 

@@ -91,6 +91,33 @@ spec:
           volumeMounts:
             - name: database-data
               mountPath: /data
+        - name: backend-outbox-publisher
+          image: "{{ .Values.backend.containers.api_service.image }}:{{ .Values.backend.containers.api_service.tag }}"
+          imagePullPolicy: Always
+          command: ["python", "-m", "api_service.rabbitmq.publisher"]
+          env:
+            - name: DB_PATH
+              value: /data/database.db
+            - name: RABBITMQ_HOST
+              value: rabbitmq.messaging.svc.cluster.local
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_USER
+              value: admin
+            - name: RABBITMQ_PASSWORD
+              value: admin
+            - name: RABBITMQ_QUEUE_SENSOR
+              value: sensor.readings
+          resources:
+            requests:
+              memory: {{ .Values.backend.resources.requests.memory }}
+              cpu: {{ .Values.backend.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.backend.resources.limits.memory }}
+              cpu: {{ .Values.backend.resources.limits.cpu }}
+          volumeMounts:
+            - name: database-data
+              mountPath: /data
         - name: backend-edge-server
           image: "{{ .Values.backend.containers.edge_server.image }}:{{ .Values.backend.containers.edge_server.tag }}"
           imagePullPolicy: Always

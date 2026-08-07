@@ -75,8 +75,9 @@ jobs:
           ansible-galaxy collection install kubernetes.core
           
       - name: Deploy microservices
+        working-directory: setup/app/ansible
         run: |
           ansible-playbook \
-            setup/app/ansible/playbooks/apps.yml \
-            -i setup/app/hosts \
+            playbooks/apps.yml \
+            -i hosts \
             -t install
