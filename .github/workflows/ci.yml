@@ -79,11 +79,11 @@ jobs:
 
       - name: Run Semgrep
         run: |
-          ../../../scripts/security/run-semgrep.sh ${{ matrix.service_path }}
+          scripts/security/run-semgrep.sh .
 
       - name: Run Dependency Scan
         run: |
-          ../../../scripts/security/run-pip-audit.sh ${{ matrix.service_path }}
+          scripts/security/run-pip-audit.sh .
 
       - name: Run tests
         run: |

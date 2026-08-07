@@ -96,6 +96,7 @@ Pre-requisite - create 'venv' environments under each microservice folder with i
 
 ## Github CI/CD setup
 ### Local github runner for MacOS ARM64 setup
+## Go to Github->Settings->Actions->Runners, click New Self-hosted Runner and select mac OS and follow the steps. Example below 
 1. Create a folder
    mkdir actions-runner && cd actions-runner
 2. Download the latest runner package
