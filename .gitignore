@@ -19,3 +19,5 @@ diagrams/
 *.asciidoctor
 images/
 *.env.local*
+**/generated/
+*.buildx-cache*

@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package sensor.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service SensorService {
+  // Get a single reading by id
+  rpc GetReading (GetReadingRequest) returns (SensorReadingResponse) {}
+
+  // Stream all readings for a sensor within a time range
+  rpc ListReadings (ListReadingsRequest) returns (stream SensorReadingResponse) {}
+
+  // Submit a new reading
+  rpc SubmitReading (SensorReading) returns (SensorReadingResponse) {}
+}
+
+message SensorReading {
+  string event_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  float temperature = 3;
+  float humidity = 4;
+}
+
+message SensorReadingResponse {
+  string event_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  float temperature = 3;
+  float humidity = 4;
+  string status = 5;
+}
+
+message GetReadingRequest {
+  string event_id = 1;
+}
+
+message ListReadingsRequest {
+  string no_of_latest_readings = 1;
+}

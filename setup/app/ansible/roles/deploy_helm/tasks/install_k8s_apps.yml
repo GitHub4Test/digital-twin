@@ -64,7 +64,7 @@
     cmd: helm upgrade --install {{ deploy_helm_dt_release }} {{ deploy_helm_charts_folder }}
          --namespace {{ deploy_helm_dt_namespace }} --create-namespace --wait --timeout 15m --rollback-on-failure
          --set ecr_setup.enabled={{ ecr_enabled }}
-         --set backend.containers.api_service.image={{ deploy_helm_nexus_repo }}/api-service
+         --set backend.containers.api_gateway.image={{ deploy_helm_nexus_repo }}/api-gateway
          --set backend.containers.edge_server.image={{ deploy_helm_nexus_repo }}/edge-server
          --set frontend.containers.app.image={{ deploy_helm_nexus_repo }}/digital-twin-app
   environment:

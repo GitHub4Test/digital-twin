@@ -21,8 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - service_name: api-service
-            service_path: apps/backend/api-service
+          - service_name: api-gateway
+            service_path: apps/backend/api-gateway
 
           - service_name: edge-server
             service_path: apps/backend/edge-server
@@ -76,6 +76,14 @@ jobs:
       - name: Install project package
         run: |
           poetry install --no-interaction
+
+      - name: Generate protos           
+        run: |
+          ../../../scripts/protos/generateprotos.sh
+
+      - name: Git Diff # fails if generated code is out of sync with .proto                    
+        run: |
+          git diff --exit-code             
 
       - name: Run SAST
         run: |

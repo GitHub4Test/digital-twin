@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BUILD_SCRIPTS_PATH=$(cd .. && pwd)
-echo "Build Scripts Path: $BUILD_SCRIPTS_PATH"
-cd "$BUILD_SCRIPTS_PATH"
+echo "==> Backend: Build has been started"
 
-APPS_PATH="$BUILD_SCRIPTS_PATH/backend"
+BUILD_SCRIPTS_PATH=scripts/build
 
-./build/build_common.sh
+APPS_PATH="apps/backend"
 
-# api_service
-./build/build_package.sh "$APPS_PATH/api-service"
-./build/publish_package.sh "$APPS_PATH/api-service"
-./build/build_docker.sh "$APPS_PATH/api-service"
+./$BUILD_SCRIPTS_PATH/build_common.sh
 
-# edge_server
-./build/build_package.sh "$APPS_PATH/edge-server"
-./build/publish_package.sh "$APPS_PATH/edge-server"
-./build/build_docker.sh "$APPS_PATH/edge-server"
+API_GATEWAY=api-gateway
+SENSOR_SERVICE=sensor-service
+EDGE_SERVER=edge-server
+
+for APP in "$API_GATEWAY" "$SENSOR_SERVICE" "$EDGE_SERVER"; do
+    echo "==> [$APP] Building and pushing package for app"
+
+    ./$BUILD_SCRIPTS_PATH/build_publish_package.sh "$APPS_PATH/$APP"
+    ./$BUILD_SCRIPTS_PATH/build_docker.sh "$APPS_PATH/$APP"
+done
+
+echo "==> Backend: Build has been ended"

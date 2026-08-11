@@ -2,8 +2,12 @@
 {
   "folders": [
     {
-      "name": "api-service",
-      "path": "apps/backend/api-service"
+      "name": "api-gateway",
+      "path": "apps/backend/api-gateway"
+    },
+    {
+      "name": "sensor-service",
+      "path": "apps/backend/sensor-service"
     },
     {
       "name": "edge-server",
@@ -20,9 +24,9 @@
     "python.testing.pytestArgs": [
       "tests"
     ],
-    "python.analysis.extraPaths": [
-      "${workspaceFolder}/src"
-    ],
-    "python.envFile": "${workspaceFolder}/.env"
+    // "python.analysis.extraPaths": [
+    //   "${workspaceFolder}"
+    // ],
+    "python.envFile": "${workspaceFolder}/.venv"
   }
 }

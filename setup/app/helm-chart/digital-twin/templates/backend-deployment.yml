@@ -21,12 +21,12 @@ spec:
       # nodeSelector:
       #   kubernetes.io/hostname: k3d-dev-cluster-server-0
       containers:
-        - name: backend-api-service
-          image: "{{ .Values.backend.containers.api_service.image }}:{{ .Values.backend.containers.api_service.tag }}"
+        - name: backend-api-gateway
+          image: "{{ .Values.backend.containers.api_gateway.image }}:{{ .Values.backend.containers.api_gateway.tag }}"
           imagePullPolicy: Always
           ports:
             - containerPort: {{ .Values.backend.service.port }}
-          command: ["uvicorn", "api_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
+          command: ["uvicorn", "api_gateway.main:app", "--host", "0.0.0.0", "--port", "8000"]
           env:
             - name: DB_PATH
               value: /data/database.db
@@ -65,9 +65,9 @@ spec:
             - name: database-data
               mountPath: /data
         - name: backend-sensor-consumer
-          image: "{{ .Values.backend.containers.api_service.image }}:{{ .Values.backend.containers.api_service.tag }}"
+          image: "{{ .Values.backend.containers.api_gateway.image }}:{{ .Values.backend.containers.api_gateway.tag }}"
           imagePullPolicy: Always
-          command: ["python", "-m", "api_service.rabbitmq.consumer"]
+          command: ["python", "-m", "api_gateway.rabbitmq.consumer"]
           env:
             - name: DB_PATH
               value: /data/database.db
@@ -92,9 +92,9 @@ spec:
             - name: database-data
               mountPath: /data
         - name: backend-outbox-publisher
-          image: "{{ .Values.backend.containers.api_service.image }}:{{ .Values.backend.containers.api_service.tag }}"
+          image: "{{ .Values.backend.containers.api_gateway.image }}:{{ .Values.backend.containers.api_gateway.tag }}"
           imagePullPolicy: Always
-          command: ["python", "-m", "api_service.rabbitmq.publisher"]
+          command: ["python", "-m", "api_gateway.rabbitmq.publisher"]
           env:
             - name: DB_PATH
               value: /data/database.db

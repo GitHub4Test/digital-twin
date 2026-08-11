@@ -1,0 +1,46 @@
+# VCS
+.git
+.gitignore
+
+# Python
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.venv
+**/venv
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/dist
+**/*.egg-info
+
+# Build artifacts
+**/generated/**
+**/generated_output
+
+# Editor/OS cruft
+**/.DS_Store
+**/.vscode
+**/.idea
+
+# Secrets/env — never send these to build context
+**/.env
+**/.env.*
+
+# Docs, CI configs not needed in image
+**/*.md
+!**/README.md
+.github
+
+# Node (if any JS services live in the monorepo)
+**/node_modules
+
+**/.poetry
+**/doc
+**/tests/**
+**/tests
+**/data/database.db
+
+.semgrepignore
+poetry.lock
+pyproject.toml

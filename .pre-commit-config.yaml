@@ -1,19 +1,19 @@
 repos:
   - repo: local
     hooks:
-      - id: semgrep-api-service
-        name: semgrep security scan (api-service)
-        entry: bash scripts/security/run-semgrep.sh apps/backend/api-service
+      - id: semgrep-api-gateway
+        name: semgrep security scan (api-gateway)
+        entry: bash scripts/security/run-semgrep.sh apps/backend/api-gateway
         language: system
         pass_filenames: false
-        files: ^apps/backend/api-service/
+        files: ^apps/backend/api-gateway/
 
-      - id: pip-audit-api-service
-        name: pip audit (api-service)
-        entry: bash scripts/security/run-pip-audit.sh apps/backend/api-service
+      - id: pip-audit-api-gateway
+        name: pip audit (api-gateway)
+        entry: bash scripts/security/run-pip-audit.sh apps/backend/api-gateway
         language: system
         pass_filenames: false
-        files: ^apps/backend/api-service/
+        files: ^apps/backend/api-gateway/
 
       - id: semgrep-edge-server
         name: semgrep security scan (edge-server)

@@ -142,6 +142,13 @@ Pre-requisite - create 'venv' environments under each microservice folder with i
   - SERVICE_PATH=apps/backend/edge-server
   - SERVICE_PATH=apps/frontend/digital-twin-app
 
+## grpc setup
+1. pip install grpcio grpcio-tools in global python env
+2. pip install protoletariat --break-system-packages
+3. pip install protobuf
+4. Create proto/.proto file
+5. Generate protobuf files. For ex. scripts/protos/generateprotos.sh
+
 ## Development notes
 
 - Python projects use `pyproject.toml` in each service. Install dependencies per-service in a virtualenv.

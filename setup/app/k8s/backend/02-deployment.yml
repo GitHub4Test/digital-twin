@@ -15,7 +15,7 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: k3d-dev-cluster-server-0
       containers:
-        - name: backend-api-service
+        - name: backend-api-gateway
           image: localhost:6000/backend_api_service
           ports:
             - containerPort: 8000
