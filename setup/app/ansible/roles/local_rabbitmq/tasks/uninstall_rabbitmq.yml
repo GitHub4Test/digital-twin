@@ -1,0 +1,13 @@
+---
+- name: Stop RabbitMQ service
+  ansible.builtin.command:
+    cmd: brew services stop rabbitmq
+  register: rabbitmq_stop
+  changed_when: "'Successfully stopped' in rabbitmq_stop.stdout
+                 or 'Stopping' in rabbitmq_stop.stdout"
+  failed_when: false
+
+- name: Uninstall RabbitMQ
+  community.general.homebrew:
+    name: rabbitmq
+    state: absent

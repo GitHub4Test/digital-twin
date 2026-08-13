@@ -1,0 +1,19 @@
+---
+
+- name: Install -> rabbitmq locally
+  ansible.builtin.include_tasks:
+    file: install_rabbitmq.yml
+    apply:
+      tags:
+        - install
+  tags:
+    - install
+
+- name: Uninstall -> rabbitmq 
+  ansible.builtin.include_tasks:
+    file: uninstall_rabbitmq.yml
+    apply:
+      tags:
+        - uninstall
+  tags:
+    - uninstall

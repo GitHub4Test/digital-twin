@@ -3,20 +3,14 @@ Database Operations Unit Tests - Backend
 Tests for database.py covering initialization, CRUD operations, and health checks
 """
 
-import sys
 import os
-import unittest
+import sys
 import tempfile
-import sqlite3
-import json
-import uuid
-from datetime import datetime
-from pathlib import Path
-from unittest.mock import patch
+import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../src"))
 from sensor_service.db_controller.db_mgr import DBMgr
-from sensor_service.db_controller.db_exceptions import DuplicateEventError
+
 
 class TestDatabaseInit(unittest.TestCase):
     """Test suite for Database initialization"""
@@ -34,13 +28,16 @@ class TestDatabaseInit(unittest.TestCase):
     def test_database_default_path(self):
         """Database should use default path when not specified"""
         db = DBMgr()
-        self.assertEqual(db.db_path, os.environ.get("DB_PATH", "./data/database.db"))
+        self.assertEqual(
+            db.db_path, os.environ.get("DB_PATH", "./data/database.db")
+        )
 
     def test_database_custom_path(self):
         """Database should use custom path when specified"""
         custom_path = "/custom/path/db.sqlite"
         db = DBMgr(db_path=custom_path)
         self.assertEqual(db.db_path, custom_path)
+
 
 class TestHealthCheck(unittest.TestCase):
     """Test suite for health_check method"""
@@ -72,6 +69,7 @@ class TestHealthCheck(unittest.TestCase):
         result = db.health_check()
         # Could be True (if SQLite auto-creates) or False (if permission denied)
         self.assertIsInstance(result, bool)
+
 
 if __name__ == "__main__":
     unittest.main()

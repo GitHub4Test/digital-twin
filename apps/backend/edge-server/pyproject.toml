@@ -2,10 +2,10 @@
 name = "edge-server"
 version = "0.2.1"
 description = ""
-authors = ["Suhas Pachling <suhas@test.com>"]
+authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 packages = [
-    { include = "edge_server", from = "src" }
+    { include = "edge_server" }
 ]
 
 [tool.poetry.dependencies]
@@ -17,6 +17,9 @@ pytest = "^7.4.0"
 black = "^23.10.0"
 flake8 = "^6.1.0"
 pre-commit = "^4.0.0"
+ruff = "^0.16.2"
+pylint = "^4.0.7"
+isort = "^8.0.1"
 
 
 [tool.poetry.group.security.dependencies]
@@ -31,6 +34,22 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "-v"
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.pylint.messages_control]
+disable = [
+    "W1203",
+    "C0114",
+    "C0115",
+    "C0116",
+    "C0301",
+]
+
+[tool.ruff]
+line-length = 100

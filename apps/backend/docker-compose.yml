@@ -2,64 +2,90 @@ version: '3.8'
 
 services:
   api_gateway:
-    build:
-      context: ./api_gateway
-      dockerfile: Dockerfile
-      network: host   # Host network only for build
+    image: ${NEXUS_DOCKER_REPO}/api-gateway:1.0.0
+    pull_policy: always
     container_name: api_gateway
     ports:
       - "8000:8000"
+    environment:
+      SENSOR_SERVICE_ADDR: sensor_service:50052
+      RABBITMQ_HOST: host.docker.internal
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: admin      
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 5s
+    depends_on:
+      sensor_service:
+        condition: service_healthy      
     networks:
       - digital-twin-network
     restart: unless-stopped
 
   sensor_service:
-    build:
-      context: ./sensor_service
-      dockerfile: Dockerfile
-      network: host   # Host network only for build
+    image: ${NEXUS_DOCKER_REPO}/sensor-service:1.0.0
+    pull_policy: always
     container_name: sensor_service
     ports:
       - "8001:8001"
     volumes:
       - database_data:/data
     environment:
-      - DB_PATH=/data/database.db
+      DB_PATH: /data/database.db
+      RABBITMQ_HOST: host.docker.internal
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: admin
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/api/v1/health"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/v1/health')"
+        ]
       interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - digital-twin-network
     restart: unless-stopped
 
   edge_server:
-    build:
-      context: ./edge_server
-      dockerfile: Dockerfile
-      network: host   # Host network only for build
+    image: ${NEXUS_DOCKER_REPO}/edge-server:0.2.1
+    pull_policy: always
     container_name: edge_server
     environment:
-      - BACKEND_API_URL=http://backend:8000/api/v1/readings
+      - BACKEND_API_URL=http://api_gateway:8000/api/v1/sensor/readings
     depends_on:
-      backend:
+      api_gateway:
         condition: service_healthy
     networks:
       - digital-twin-network
     restart: unless-stopped
-^
+
 volumes:
   database_data:
     driver: local
 
 networks:
   digital-twin-network:
+    name: digital-twin-network
     driver: bridge
+
+secrets:
+  nexus_username:
+    file: ./secrets/nexus_username.txt
+  nexus_password:
+    file: ./secrets/nexus_password.txt    

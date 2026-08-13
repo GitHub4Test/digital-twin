@@ -3,12 +3,24 @@ version: '3.8'
 services:
 
   digital_twin_app:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
+    image: ${NEXUS_DOCKER_REPO}/digital-twin-app:1.0.2
     container_name: digital_twin_app
     ports:
       - "8501:8501"
     environment:
-      - BACKEND_API_URL=http://raspberrypi:8000/data
+      - BACKEND_API_URL=http://api_gateway:8000/api/v1/sensor/readings
+      - SENSOR_INTERVAL_S=15
+    networks:
+      - digital-twin-network      
     restart: unless-stopped
+
+networks:
+  digital-twin-network:
+    external: true
+    name: digital-twin-network
+
+secrets:
+  nexus_username:
+    file: ./secrets/nexus_username.txt
+  nexus_password:
+    file: ./secrets/nexus_password.txt 

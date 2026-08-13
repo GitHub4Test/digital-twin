@@ -98,18 +98,18 @@ Edit environment_sim.py to customize:
 
 ```python
 # Initial conditions
-temperature = 22.0          # Starting temperature (°C)
-outside_temp = 30           # Ambient temperature (°C)
-humidity = 50.0             # Starting humidity (%)
+temperature = 22.0  # Starting temperature (°C)
+outside_temp = 30  # Ambient temperature (°C)
+humidity = 50.0  # Starting humidity (%)
 
 # Thresholds
-if temperature > 26:        # Cooling ON threshold
+if temperature > 26:  # Cooling ON threshold
     cooling_on = True
-elif temperature < 24:      # Cooling OFF threshold
+elif temperature < 24:  # Cooling OFF threshold
     cooling_on = False
 
 # Cycle time
-time.sleep(3)               # Seconds between readings
+time.sleep(3)  # Seconds between readings
 ```
 
 ## 📊 Output Example

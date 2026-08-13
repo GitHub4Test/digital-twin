@@ -1,15 +1,17 @@
 import logging
 import os
+
 import aio_pika
 
 logger = logging.getLogger(__name__)
+
 
 class RabbitMQ:
     def __init__(self):
         self.host = os.getenv("RABBITMQ_HOST", "localhost")
         self.port = int(os.getenv("RABBITMQ_PORT", "5672"))
-        self.user = os.getenv("RABBITMQ_USER", "admin")
-        self.password = os.getenv("RABBITMQ_PASSWORD", "admin")
+        self.user = os.getenv("RABBITMQ_USER", "guest")
+        self.password = os.getenv("RABBITMQ_PASSWORD", "guest")
 
         self.connection = None
         self.channel = None
@@ -29,7 +31,7 @@ class RabbitMQ:
             await self.channel.set_qos(prefetch_count=10)
             logger.info("Successfully connected to RabbitMQ and initialized channel")
         except Exception as e:
-            logger.error(f"Failed to connect to RabbitMQ: {str(e)}")
+            logger.error(f"Failed to connect to RabbitMQ: {e!s}")
             raise
 
     async def close(self):

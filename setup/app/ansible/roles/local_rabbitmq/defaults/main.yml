@@ -1,0 +1,9 @@
+---
+
+rabbitmq_package: rabbitmq
+rabbitmq_service_name: rabbitmq
+rabbitmq_management_plugin: rabbitmq_management
+
+rabbitmq_user: admin
+rabbitmq_password: admin
+

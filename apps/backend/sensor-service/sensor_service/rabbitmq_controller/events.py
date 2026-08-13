@@ -3,8 +3,10 @@ Events for sensor data readings and processing
 """
 
 from datetime import datetime
-from pydantic import BaseModel, Field
 from uuid import UUID
+
+from pydantic import BaseModel, Field
+
 
 class SensorReadingEvent(BaseModel):
     event_id: UUID

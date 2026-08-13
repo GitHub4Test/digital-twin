@@ -7,23 +7,21 @@ ARG NEXUS_PYPI_SIMPLE_URL
 ARG PACKAGE_NAME
 ARG VERSION
 
-RUN --mount=type=secret,id=nexus_ca_cert \
-    --mount=type=secret,id=nexus_username \
-    --mount=type=secret,id=nexus_password \
-    cp /run/secrets/nexus_ca_cert /usr/local/share/ca-certificates/nexus-ca.crt \
- && update-ca-certificates \
- && export NEXUS_USERNAME="$(cat /run/secrets/nexus_username)" \
- && export NEXUS_PASSWORD="$(cat /run/secrets/nexus_password)" \
- && pip install --no-cache-dir \
-    --index-url "https://${NEXUS_USERNAME}:${NEXUS_PASSWORD}@${NEXUS_PYPI_SIMPLE_URL}" \
-    "${PACKAGE_NAME}==${VERSION}" \
- && python -m pip uninstall -y setuptools wheel || true \
- && rm -rf /usr/local/lib/python3.11/site-packages/setuptools* \
- && rm -rf /usr/local/lib/python3.11/site-packages/wheel* \
- && rm -rf /usr/local/lib/python3.11/site-packages/*jaraco*
-
 RUN addgroup --system digital-twin \
     && adduser --system --ingroup digital-twin digital-twin
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=secret,id=nexus_username \
+    --mount=type=secret,id=nexus_password \
+    NEXUS_USERNAME=$(cat /run/secrets/nexus_username) && \
+    NEXUS_PASSWORD=$(cat /run/secrets/nexus_password) && \
+    pip install --no-cache-dir \
+    --index-url "http://${NEXUS_USERNAME}:${NEXUS_PASSWORD}@${NEXUS_PYPI_SIMPLE_URL}" \
+    --trusted-host "$(echo "$NEXUS_PYPI_SIMPLE_URL" | cut -d/ -f1 | cut -d: -f1)" \
+    "${PACKAGE_NAME}==${VERSION}" \
+ && pip show "${PACKAGE_NAME}" \
+ && python -c "import edge_server; print(edge_server.__file__)" \    
+ && (python -m pip uninstall -y setuptools wheel || true)
 
 USER digital-twin
 

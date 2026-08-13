@@ -7,6 +7,9 @@ readme = "README.md"
 packages = [
     { include = "sensor_service"}
 ]
+include = [
+    { path = "sensor_service/generated/**/*.py", format = ["sdist", "wheel"] }
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0.0"
@@ -19,6 +22,7 @@ pybreaker = "^1.4.1"
 starlette = "^1.1.0"
 h11 = "0.16.0"
 grpcio = "^1.83.0"
+protobuf = ">=5,<7"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
@@ -26,6 +30,9 @@ black = "^23.10.0"
 flake8 = "^6.1.0"
 httpx = "^0.28.0"
 pre-commit = "^4.0.0"
+pylint = "^4.0.7"
+isort = "^8.0.1"
+ruff = "^0.16.2"
 
 
 [tool.poetry.group.security.dependencies]
@@ -43,3 +50,21 @@ build-backend = "poetry.core.masonry.api"
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "-v"
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.pylint.main]
+ignore-paths = [
+    "sensor_service/generated/.*"
+]
+
+[tool.pylint.messages_control]
+disable = [
+    "W1203",
+    "C0114",
+    "C0115",
+    "C0116",
+    "C0301",
+]

@@ -1,23 +1,29 @@
 import logging
 import os
+
 import aio_pika
 
 logger = logging.getLogger(__name__)
+
 
 class RabbitMQ:
     def __init__(self):
         self.host = os.getenv("RABBITMQ_HOST", "localhost")
         self.port = int(os.getenv("RABBITMQ_PORT", "5672"))
-        self.user = os.getenv("RABBITMQ_USER", "admin")
-        self.password = os.getenv("RABBITMQ_PASSWORD", "admin")
+        self.user = os.getenv("RABBITMQ_USER", "guest")
+        self.password = os.getenv("RABBITMQ_PASSWORD", "guest")
 
         self.connection = None
         self.channel = None
-        logger.info(f"RabbitMQ initialized with host={self.host}, port={self.port}")
+        logger.info(
+            f"RabbitMQ initialized with host={self.host}, port={self.port}"
+        )
 
     async def connect(self):
         try:
-            logger.info(f"Connecting to RabbitMQ at {self.host}:{self.port}")
+            logger.info(
+                f"Connecting to RabbitMQ at {self.host}:{self.port}"
+            )
             self.connection = await aio_pika.connect_robust(
                 host=self.host,
                 port=self.port,
@@ -25,11 +31,15 @@ class RabbitMQ:
                 password=self.password,
             )
 
-            self.channel = await self.connection.channel(publisher_confirms=True)
+            self.channel = await self.connection.channel(
+                publisher_confirms=True
+            )
             await self.channel.set_qos(prefetch_count=10)
-            logger.info("Successfully connected to RabbitMQ and initialized channel")
+            logger.info(
+                "Successfully connected to RabbitMQ and initialized channel"
+            )
         except Exception as e:
-            logger.error(f"Failed to connect to RabbitMQ: {str(e)}")
+            logger.error(f"Failed to connect to RabbitMQ: {e!s}")
             raise
 
     async def close(self):
@@ -37,6 +47,13 @@ class RabbitMQ:
         if self.connection:
             await self.connection.close()
         logger.info("RabbitMQ connection closed")
+
+    async def is_connected(self):
+        if self.connection and not self.connection.is_closed:
+            logger.debug("RabbitMQ connection is open")
+            return True
+        logger.warning("RabbitMQ connection is closed")
+        return False
 
 
 rabbitmq = RabbitMQ()

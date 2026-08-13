@@ -3,19 +3,20 @@ API Service Models Unit Tests - Backend
 Tests for Pydantic models in models.py covering data validation and serialization
 """
 
-import sys
 import os
+import sys
 import unittest
 from datetime import datetime
+
 from pydantic import ValidationError
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../apps/backend/api-gateway'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../apps/backend/api-gateway"))
 from api_gateway.models import (
-    SensorReading,
-    SensorReadingResponse,
+    ErrorResponse,
     HealthCheckResponse,
     MessageResponse,
-    ErrorResponse
+    SensorReading,
+    SensorReadingResponse,
 )
 
 
@@ -25,147 +26,90 @@ class TestSensorReading(unittest.TestCase):
     def test_valid_sensor_reading(self):
         """Should create valid sensor reading"""
         now = datetime.now().isoformat()
-        reading = SensorReading(
-            timestamp=now,
-            temperature=24.5,
-            humidity=61.2
-        )
+        reading = SensorReading(timestamp=now, temperature=24.5, humidity=61.2)
         self.assertEqual(reading.temperature, 24.5)
         self.assertEqual(reading.humidity, 61.2)
 
     def test_temperature_min_boundary(self):
         """Temperature at minimum boundary (-50) should be valid"""
         now = datetime.now().isoformat()
-        reading = SensorReading(
-            timestamp=now,
-            temperature=-50.0,
-            humidity=50.0
-        )
+        reading = SensorReading(timestamp=now, temperature=-50.0, humidity=50.0)
         self.assertEqual(reading.temperature, -50.0)
 
     def test_temperature_max_boundary(self):
         """Temperature at maximum boundary (150) should be valid"""
         now = datetime.now().isoformat()
-        reading = SensorReading(
-            timestamp=now,
-            temperature=150.0,
-            humidity=50.0
-        )
+        reading = SensorReading(timestamp=now, temperature=150.0, humidity=50.0)
         self.assertEqual(reading.temperature, 150.0)
 
     def test_temperature_below_minimum(self):
         """Temperature below -50 should fail validation"""
         now = datetime.now().isoformat()
         with self.assertRaises(ValidationError):
-            SensorReading(
-                timestamp=now,
-                temperature=-50.1,
-                humidity=50.0
-            )
+            SensorReading(timestamp=now, temperature=-50.1, humidity=50.0)
 
     def test_temperature_above_maximum(self):
         """Temperature above 150 should fail validation"""
         now = datetime.now().isoformat()
         with self.assertRaises(ValidationError):
-            SensorReading(
-                timestamp=now,
-                temperature=150.1,
-                humidity=50.0
-            )
+            SensorReading(timestamp=now, temperature=150.1, humidity=50.0)
 
     def test_humidity_min_boundary(self):
         """Humidity at minimum boundary (0) should be valid"""
         now = datetime.now().isoformat()
-        reading = SensorReading(
-            timestamp=now,
-            temperature=25.0,
-            humidity=0.0
-        )
+        reading = SensorReading(timestamp=now, temperature=25.0, humidity=0.0)
         self.assertEqual(reading.humidity, 0.0)
 
     def test_humidity_max_boundary(self):
         """Humidity at maximum boundary (100) should be valid"""
         now = datetime.now().isoformat()
-        reading = SensorReading(
-            timestamp=now,
-            temperature=25.0,
-            humidity=100.0
-        )
+        reading = SensorReading(timestamp=now, temperature=25.0, humidity=100.0)
         self.assertEqual(reading.humidity, 100.0)
 
     def test_humidity_below_minimum(self):
         """Humidity below 0 should fail validation"""
         now = datetime.now().isoformat()
         with self.assertRaises(ValidationError):
-            SensorReading(
-                timestamp=now,
-                temperature=25.0,
-                humidity=-0.1
-            )
+            SensorReading(timestamp=now, temperature=25.0, humidity=-0.1)
 
     def test_humidity_above_maximum(self):
         """Humidity above 100 should fail validation"""
         now = datetime.now().isoformat()
         with self.assertRaises(ValidationError):
-            SensorReading(
-                timestamp=now,
-                temperature=25.0,
-                humidity=100.1
-            )
+            SensorReading(timestamp=now, temperature=25.0, humidity=100.1)
 
     def test_missing_timestamp(self):
         """Missing timestamp should fail validation"""
         with self.assertRaises(ValidationError):
-            SensorReading(
-                temperature=25.0,
-                humidity=50.0
-            )
+            SensorReading(temperature=25.0, humidity=50.0)
 
     def test_missing_temperature(self):
         """Missing temperature should fail validation"""
         now = datetime.now().isoformat()
         with self.assertRaises(ValidationError):
-            SensorReading(
-                timestamp=now,
-                humidity=50.0
-            )
+            SensorReading(timestamp=now, humidity=50.0)
 
     def test_missing_humidity(self):
         """Missing humidity should fail validation"""
         now = datetime.now().isoformat()
         with self.assertRaises(ValidationError):
-            SensorReading(
-                timestamp=now,
-                temperature=25.0
-            )
+            SensorReading(timestamp=now, temperature=25.0)
 
     def test_invalid_timestamp_format(self):
         """Invalid timestamp format should fail"""
         with self.assertRaises(ValidationError):
-            SensorReading(
-                timestamp="not-a-timestamp",
-                temperature=25.0,
-                humidity=50.0
-            )
+            SensorReading(timestamp="not-a-timestamp", temperature=25.0, humidity=50.0)
 
     def test_temperature_with_decimals(self):
         """Temperature with decimal places should work"""
         now = datetime.now().isoformat()
-        reading = SensorReading(
-            timestamp=now,
-            temperature=24.567,
-            humidity=61.234
-        )
+        reading = SensorReading(timestamp=now, temperature=24.567, humidity=61.234)
         self.assertAlmostEqual(reading.temperature, 24.567, places=3)
 
     def test_realistic_sensor_data(self):
         """Should accept realistic sensor data"""
         now = datetime.now().isoformat()
-        reading = SensorReading(
-            timestamp=now,
-            temperature=22.5,
-            humidity=55.0
-        )
+        reading = SensorReading(timestamp=now, temperature=22.5, humidity=55.0)
         self.assertEqual(reading.temperature, 22.5)
         self.assertEqual(reading.humidity, 55.0)
 
@@ -193,10 +137,7 @@ class TestSensorReadingResponse(unittest.TestCase):
         """Should create valid response"""
         now = datetime.now().isoformat()
         response = SensorReadingResponse(
-            timestamp=now,
-            temperature=24.5,
-            humidity=61.2,
-            status="RECEIVED"
+            timestamp=now, temperature=24.5, humidity=61.2, status="RECEIVED"
         )
         self.assertEqual(response.temperature, 24.5)
         self.assertEqual(response.humidity, 61.2)
@@ -204,6 +145,7 @@ class TestSensorReadingResponse(unittest.TestCase):
 
     def test_from_attributes_config(self):
         """Should allow creation from ORM objects"""
+
         class FakeSensor:
             timestamp = datetime.now().isoformat()
             temperature = 25.0
@@ -220,15 +162,12 @@ class TestSensorReadingResponse(unittest.TestCase):
         """Response should have timestamp, temperature, humidity"""
         now = datetime.now().isoformat()
         response = SensorReadingResponse(
-            timestamp=now,
-            temperature=25.0,
-            humidity=50.0,
-            status="RECEIVED"
+            timestamp=now, temperature=25.0, humidity=50.0, status="RECEIVED"
         )
-        self.assertTrue(hasattr(response, 'timestamp'))
-        self.assertTrue(hasattr(response, 'temperature'))
-        self.assertTrue(hasattr(response, 'humidity'))
-        self.assertTrue(hasattr(response, 'status'))
+        self.assertTrue(hasattr(response, "timestamp"))
+        self.assertTrue(hasattr(response, "temperature"))
+        self.assertTrue(hasattr(response, "humidity"))
+        self.assertTrue(hasattr(response, "status"))
 
 
 class TestHealthCheckResponse(unittest.TestCase):
@@ -236,11 +175,7 @@ class TestHealthCheckResponse(unittest.TestCase):
 
     def test_valid_health_check(self):
         """Should create valid health check response"""
-        health = HealthCheckResponse(
-            status="healthy",
-            service="backend",
-            version="1.0.0"
-        )
+        health = HealthCheckResponse(status="healthy", service="backend", version="1.0.0")
         self.assertEqual(health.status, "healthy")
         self.assertEqual(health.service, "backend")
         self.assertEqual(health.version, "1.0.0")
@@ -248,45 +183,28 @@ class TestHealthCheckResponse(unittest.TestCase):
     def test_different_status_values(self):
         """Should accept different status values"""
         for status in ["healthy", "unhealthy", "degraded"]:
-            health = HealthCheckResponse(
-                status=status,
-                service="backend",
-                version="1.0.0"
-            )
+            health = HealthCheckResponse(status=status, service="backend", version="1.0.0")
             self.assertEqual(health.status, status)
 
     def test_missing_status(self):
         """Missing status should fail validation"""
         with self.assertRaises(ValidationError):
-            HealthCheckResponse(
-                service="backend",
-                version="1.0.0"
-            )
+            HealthCheckResponse(service="backend", version="1.0.0")
 
     def test_missing_service(self):
         """Missing service should fail validation"""
         with self.assertRaises(ValidationError):
-            HealthCheckResponse(
-                status="healthy",
-                version="1.0.0"
-            )
+            HealthCheckResponse(status="healthy", version="1.0.0")
 
     def test_missing_version(self):
         """Missing version should fail validation"""
         with self.assertRaises(ValidationError):
-            HealthCheckResponse(
-                status="healthy",
-                service="backend"
-            )
+            HealthCheckResponse(status="healthy", service="backend")
 
     def test_version_formats(self):
         """Should accept various version formats"""
         for version in ["1.0.0", "1.0", "1", "1.0.0-beta", "2023.05.23"]:
-            health = HealthCheckResponse(
-                status="healthy",
-                service="backend",
-                version=version
-            )
+            health = HealthCheckResponse(status="healthy", service="backend", version=version)
             self.assertEqual(health.version, version)
 
 
@@ -332,9 +250,7 @@ class TestErrorResponse(unittest.TestCase):
 
     def test_valid_error_response(self):
         """Should create valid error response"""
-        error = ErrorResponse(
-            detail="Database connection failed"
-        )
+        error = ErrorResponse(detail="Database connection failed")
         self.assertEqual(error.detail, "Database connection failed")
 
     def test_missing_detail(self):
@@ -352,7 +268,7 @@ class TestErrorResponse(unittest.TestCase):
         errors = [
             "Database connection failed: timeout after 30s",
             "Validation error: temperature must be between -50 and 150",
-            "Request failed with status 500"
+            "Request failed with status 500",
         ]
         for msg in errors:
             error = ErrorResponse(detail=msg)
@@ -360,10 +276,10 @@ class TestErrorResponse(unittest.TestCase):
 
     def test_error_with_special_chars(self):
         """Should handle special characters in errors"""
-        error_msg = "Error in file /path/to/file.py:42 - Invalid JSON: {\"key\": \"value\"}"
+        error_msg = 'Error in file /path/to/file.py:42 - Invalid JSON: {"key": "value"}'
         error = ErrorResponse(detail=error_msg)
         self.assertEqual(error.detail, error_msg)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

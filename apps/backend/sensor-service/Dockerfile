@@ -23,6 +23,11 @@ RUN --mount=type=cache,target=/root/.cache/pip \
       --trusted-host "$(echo "$NEXUS_PYPI_SIMPLE_URL" | cut -d/ -f1 | cut -d: -f1)" \
       "${PACKAGE_NAME}==${VERSION}"
 
+RUN mkdir -p /data \
+    && chown -R digital-twin:digital-twin /data
+
 USER digital-twin
 
-CMD ["python", "-m", "sensor_service.grpc_server"]
+EXPOSE 8001
+
+CMD ["python3", "-m", "sensor_service.app"]

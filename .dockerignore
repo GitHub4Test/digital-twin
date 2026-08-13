@@ -15,8 +15,6 @@
 **/*.egg-info
 
 # Build artifacts
-**/generated/**
-**/generated_output
 
 # Editor/OS cruft
 **/.DS_Store
@@ -44,3 +42,4 @@
 .semgrepignore
 poetry.lock
 pyproject.toml
+secrets/

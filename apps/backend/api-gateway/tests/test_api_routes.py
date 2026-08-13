@@ -3,18 +3,19 @@ API Routes Unit Tests - Backend
 Tests for FastAPI endpoints in sensor.py and common.py
 """
 
-import sys
 import os
+import sys
 import unittest
 from datetime import datetime
-from unittest.mock import patch, MagicMock, AsyncMock, Mock
+
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../apps/backend/api-gateway/src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../apps/backend/api-gateway/src"))
 
 # Set test DB path before importing app
 import tempfile
-os.environ['DB_PATH'] = os.path.join(tempfile.gettempdir(), 'test_api.sqlite3')
+
+os.environ["DB_PATH"] = os.path.join(tempfile.gettempdir(), "test_api.sqlite3")
 
 # Create test client
 from api_gateway.main import app
@@ -30,33 +31,33 @@ class TestCommonRoutes(unittest.TestCase):
         response = client.get("/api/v1/health")
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(data['status'], 'healthy')
-        self.assertEqual(data['service'], 'backend')
-        self.assertEqual(data['version'], '1.0.0')
+        self.assertEqual(data["status"], "healthy")
+        self.assertEqual(data["service"], "backend")
+        self.assertEqual(data["version"], "1.0.0")
 
     def test_health_check_returns_correct_model(self):
         """Health check response should have all required fields"""
         response = client.get("/api/v1/health")
         data = response.json()
-        self.assertIn('status', data)
-        self.assertIn('service', data)
-        self.assertIn('version', data)
+        self.assertIn("status", data)
+        self.assertIn("service", data)
+        self.assertIn("version", data)
 
     def test_liveness_check_endpoint(self):
         """GET /api/v1/live should indicate service is alive"""
         response = client.get("/api/v1/live")
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(data['status'], 'alive')
-        self.assertEqual(data['service'], 'backend')
+        self.assertEqual(data["status"], "alive")
+        self.assertEqual(data["service"], "backend")
 
     def test_liveness_check_returns_correct_fields(self):
         """Liveness check should have all required fields"""
         response = client.get("/api/v1/live")
         data = response.json()
-        self.assertIn('status', data)
-        self.assertIn('service', data)
-        self.assertIn('version', data)
+        self.assertIn("status", data)
+        self.assertIn("service", data)
+        self.assertIn("version", data)
 
     def test_readiness_check_endpoint(self):
         """GET /api/v1/ready should check database readiness"""
@@ -68,8 +69,8 @@ class TestCommonRoutes(unittest.TestCase):
         response = client.get("/api/v1/ready")
         if response.status_code == 200:
             data = response.json()
-            self.assertIn('status', data)
-            self.assertIn('service', data)
+            self.assertIn("status", data)
+            self.assertIn("service", data)
 
     def test_all_health_endpoints_have_version(self):
         """All health endpoints should include version"""
@@ -78,24 +79,24 @@ class TestCommonRoutes(unittest.TestCase):
             response = client.get(endpoint)
             if response.status_code == 200:
                 data = response.json()
-                self.assertEqual(data['version'], '1.0.0')
+                self.assertEqual(data["version"], "1.0.0")
 
     def test_health_endpoint_content_type(self):
         """Health endpoint should return JSON"""
         response = client.get("/api/v1/health")
-        self.assertIn('application/json', response.headers['content-type'])
+        self.assertIn("application/json", response.headers["content-type"])
 
     def test_health_status_is_string(self):
         """Health status should be a string"""
         response = client.get("/api/v1/health")
         data = response.json()
-        self.assertIsInstance(data['status'], str)
+        self.assertIsInstance(data["status"], str)
 
     def test_service_name_is_backend(self):
         """Service name should be 'backend'"""
         response = client.get("/api/v1/health")
         data = response.json()
-        self.assertEqual(data['service'], 'backend')
+        self.assertEqual(data["service"], "backend")
 
 
 class TestSensorReadingsValidation(unittest.TestCase):
@@ -103,150 +104,97 @@ class TestSensorReadingsValidation(unittest.TestCase):
 
     def test_create_reading_missing_timestamp(self):
         """POST /api/v1/sensors/readings without timestamp should fail"""
-        payload = {
-            "temperature": 24.5,
-            "humidity": 61.2
-        }
+        payload = {"temperature": 24.5, "humidity": 61.2}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_create_reading_missing_temperature(self):
         """POST /api/v1/sensors/readings without temperature should fail"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "humidity": 61.2
-        }
+        payload = {"timestamp": now, "humidity": 61.2}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_create_reading_missing_humidity(self):
         """POST /api/v1/sensors/readings without humidity should fail"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 24.5
-        }
+        payload = {"timestamp": now, "temperature": 24.5}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_create_reading_temperature_below_minimum(self):
         """Temperature below -50 should fail validation"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": -51.0,
-            "humidity": 50.0
-        }
+        payload = {"timestamp": now, "temperature": -51.0, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_create_reading_temperature_above_maximum(self):
         """Temperature above 150 should fail validation"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 151.0,
-            "humidity": 50.0
-        }
+        payload = {"timestamp": now, "temperature": 151.0, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_create_reading_humidity_below_minimum(self):
         """Humidity below 0 should fail validation"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 25.0,
-            "humidity": -1.0
-        }
+        payload = {"timestamp": now, "temperature": 25.0, "humidity": -1.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_create_reading_humidity_above_maximum(self):
         """Humidity above 100 should fail validation"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 25.0,
-            "humidity": 101.0
-        }
+        payload = {"timestamp": now, "temperature": 25.0, "humidity": 101.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_create_reading_invalid_timestamp_format(self):
         """Invalid timestamp format should fail"""
-        payload = {
-            "timestamp": "not-a-timestamp",
-            "temperature": 25.0,
-            "humidity": 50.0
-        }
+        payload = {"timestamp": "not-a-timestamp", "temperature": 25.0, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_create_reading_temperature_at_min_boundary(self):
         """Temperature at -50 should be valid"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": -50.0,
-            "humidity": 50.0
-        }
+        payload = {"timestamp": now, "temperature": -50.0, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertIn(response.status_code, [202, 500, 503])
 
     def test_create_reading_temperature_at_max_boundary(self):
         """Temperature at 150 should be valid"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 150.0,
-            "humidity": 50.0
-        }
+        payload = {"timestamp": now, "temperature": 150.0, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertIn(response.status_code, [202, 500, 503])
 
     def test_create_reading_humidity_at_min_boundary(self):
         """Humidity at 0 should be valid"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 25.0,
-            "humidity": 0.0
-        }
+        payload = {"timestamp": now, "temperature": 25.0, "humidity": 0.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertIn(response.status_code, [202, 500, 503])
 
     def test_create_reading_humidity_at_max_boundary(self):
         """Humidity at 100 should be valid"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 25.0,
-            "humidity": 100.0
-        }
+        payload = {"timestamp": now, "temperature": 25.0, "humidity": 100.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertIn(response.status_code, [202, 500, 503])
 
     def test_create_reading_with_float_precision(self):
         """Should accept high precision floats"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 24.123456,
-            "humidity": 61.987654
-        }
+        payload = {"timestamp": now, "temperature": 24.123456, "humidity": 61.987654}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertIn(response.status_code, [202, 500, 503])
 
     def test_create_reading_with_string_temperature(self):
         """String temperature should fail validation"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": "25.0",
-            "humidity": 50.0
-        }
+        payload = {"timestamp": now, "temperature": "25.0", "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         # Pydantic may coerce strings, so check it's not 422 or is 201/500
         self.assertNotEqual(response.status_code, 404)
@@ -254,62 +202,41 @@ class TestSensorReadingsValidation(unittest.TestCase):
     def test_create_reading_with_null_temperature(self):
         """Null temperature should fail validation"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": None,
-            "humidity": 50.0
-        }
+        payload = {"timestamp": now, "temperature": None, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_event_endpoint_missing_timestamp(self):
         """Event endpoint without timestamp should fail"""
-        payload = {
-            "temperature": 25.0,
-            "humidity": 50.0
-        }
+        payload = {"temperature": 25.0, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_event_endpoint_missing_temperature(self):
         """Event endpoint without temperature should fail"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "humidity": 50.0
-        }
+        payload = {"timestamp": now, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_event_endpoint_missing_humidity(self):
         """Event endpoint without humidity should fail"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 25.0
-        }
+        payload = {"timestamp": now, "temperature": 25.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_event_endpoint_temperature_validation(self):
         """Event endpoint should validate temperature range"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 200.0,
-            "humidity": 50.0
-        }
+        payload = {"timestamp": now, "temperature": 200.0, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
     def test_event_endpoint_humidity_validation(self):
         """Event endpoint should validate humidity range"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 25.0,
-            "humidity": 150.0
-        }
+        payload = {"timestamp": now, "temperature": 25.0, "humidity": 150.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertEqual(response.status_code, 422)
 
@@ -403,7 +330,7 @@ class TestAPIErrorHandling(unittest.TestCase):
         response = client.post(
             "/api/v1/sensors/readings",
             content=b"invalid json",
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
         self.assertEqual(response.status_code, 422)
 
@@ -429,26 +356,18 @@ class TestEventEndpointStatusCode(unittest.TestCase):
     def test_event_endpoint_returns_202_or_500(self):
         """Event endpoint should return 202 Accepted or 500 on error"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 25.0,
-            "humidity": 50.0
-        }
+        payload = {"timestamp": now, "temperature": 25.0, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         self.assertIn(response.status_code, [202, 500, 503])
 
     def test_event_endpoint_returns_json_response(self):
         """Event endpoint should return JSON response"""
         now = datetime.now().isoformat()
-        payload = {
-            "timestamp": now,
-            "temperature": 25.0,
-            "humidity": 50.0
-        }
+        payload = {"timestamp": now, "temperature": 25.0, "humidity": 50.0}
         response = client.post("/api/v1/sensors/readings", json=payload)
         if response.status_code in [202, 500]:
-            self.assertIn('application/json', response.headers['content-type'])
+            self.assertIn("application/json", response.headers["content-type"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

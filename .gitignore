@@ -21,3 +21,4 @@ images/
 *.env.local*
 **/generated/
 *.buildx-cache*
+secrets/

@@ -13,6 +13,8 @@ API_GATEWAY=api-gateway
 SENSOR_SERVICE=sensor-service
 EDGE_SERVER=edge-server
 
+./scripts/protos/generateprotos.sh
+
 for APP in "$API_GATEWAY" "$SENSOR_SERVICE" "$EDGE_SERVER"; do
     echo "==> [$APP] Building and pushing package for app"
 

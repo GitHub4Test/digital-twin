@@ -35,6 +35,7 @@ echo "==> ==> 1. $PACKAGE_NAME: Building Docker image for platforms - $PLATFORMS
 BUILD_ARGS=(
   --builder multiarch-builder
   -f "$SERVICE_PATH/Dockerfile"
+  --progress=plain \
   --cache-from "type=registry,ref=$CACHE_TAG"
   --cache-to "type=registry,ref=$CACHE_TAG,mode=max"
   --build-arg "NEXUS_PYPI_SIMPLE_URL=$NEXUS_PYPI_SIMPLE_URL"

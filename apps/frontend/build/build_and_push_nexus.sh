@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BUILD_SCRIPTS_PATH=$(cd .. && pwd)
-echo "Build Scripts Path: $BUILD_SCRIPTS_PATH"
-cd "$BUILD_SCRIPTS_PATH"
+echo "==> Frontend: Build has been started"
 
-APPS_PATH="$BUILD_SCRIPTS_PATH/frontend"
+BUILD_SCRIPTS_PATH=scripts/build
 
-./build/build_common.sh
+APPS_PATH="apps/frontend/digital-twin-app"
 
-# frontend
-./build/build_package.sh $APPS_PATH/digital-twin-app
-./build/publish_package.sh $APPS_PATH/digital-twin-app
-./build/build_docker.sh $APPS_PATH/digital-twin-app
+./$BUILD_SCRIPTS_PATH/build_common.sh
+
+./$BUILD_SCRIPTS_PATH/build_publish_package.sh "$APPS_PATH"
+./$BUILD_SCRIPTS_PATH/build_docker.sh "$APPS_PATH"
+
+echo "==> Frontend: Build has been ended"

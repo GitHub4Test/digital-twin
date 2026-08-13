@@ -1,38 +1,6 @@
 ---
-- name: K3s Install Stage
-  hosts: raspberrypi
-  gather_facts: true
-  become: true
-  tasks:
 
-    - name: Install K3s with Flannel and kubeconfig
-      ansible.builtin.shell: |
-        curl -sfL https://get.k3s.io | sh -
-      environment:
-        INSTALL_K3S_EXEC: "--disable traefik --disable servicelb --disable local-storage --write-kubeconfig-mode 644"
-
-    - name: Wait for Flannel interface to appear
-      ansible.builtin.wait_for:
-        path: /run/flannel/subnet.env
-        state: present
-        timeout: 60
-
-    - name: Ensure CNI bridge is up
-      ansible.builtin.command: ip link show cni0
-      register: cni_output
-      failed_when: "'state UP' not in cni_output.stdout"
-
-    - name: Check pod networking
-      ansible.builtin.shell: |
-        k3s kubectl get pods -n kube-system -o wide
-      register: pods_status
-
-    - name: Print pod status
-      ansible.builtin.debug:
-        var: pods_status.stdout_lines
-
-    - name: Test DNS resolution from a pod
-      ansible.builtin.shell: |
-        k3s kubectl run testpod --rm -i --tty --image=busybox -- nslookup google.com
-      register: dns_test
-      failed_when: dns_test.rc != 0
+- name: local test setup
+  hosts: localhost
+  roles:
+    - local_rabbitmq
